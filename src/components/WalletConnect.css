@@ -134,14 +134,24 @@
 }
 
 .balance-icon {
-  font-size: 24px;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 50%;
+}
+
+.token-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* Если иконки всё ещё большие, добавьте: */
+  max-width: 16px;
+  max-height: 16px;
 }
 
 .balance-info {
@@ -175,27 +185,6 @@
 @keyframes loadingPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-
-.balance-updated {
-  font-size: 11px;
-  color: var(--tg-theme-hint-color, #8e8e93);
-  margin-top: 8px;
-  text-align: right;
-}
-
-.wallet-network {
-  display: flex;
-  justify-content: center;
-}
-
-.network-badge {
-  background: rgba(48, 209, 88, 0.1);
-  color: #30d158;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .disconnect-button {
