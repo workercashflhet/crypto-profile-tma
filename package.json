@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@telegram-apps/sdk-react": "^3.1.0",
+    "@ton-api/client": "^0.4.0",
     "@ton/ton": "14.0.0",
     "@tonconnect/ui-react": "^2.0.2",
+    "axios": "^1.16.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

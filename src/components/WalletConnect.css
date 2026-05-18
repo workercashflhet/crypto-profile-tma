@@ -18,9 +18,9 @@
   color: var(--tg-theme-text-color, #ffffff);
   font-size: 14px;
   margin: 0 0 8px;
+  text-align: center;
 }
 
-/* Стандартная кнопка TonConnect UI рендерится внутри контейнера */
 .ton-connect-custom {
   width: 100%;
 }
@@ -28,25 +28,174 @@
 .wallet-info {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.wallet-header {
+  display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+}
+
+.wallet-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #30d158;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.wallet-status-text {
+  color: #30d158;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.wallet-address-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--tg-theme-bg-color, #2c2c2e);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.wallet-label {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  text-transform: uppercase;
 }
 
 .wallet-address {
-  background: var(--tg-theme-bg-color, #2c2c2e);
-  padding: 12px 24px;
-  border-radius: 12px;
+  flex: 1;
   font-family: monospace;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #ffffff);
-  letter-spacing: 0.5px;
-}
-
-.wallet-status {
-  color: #30d158; /* Зеленый, как индикатор успеха */
   font-size: 14px;
   font-weight: 500;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.copy-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.copy-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для балансов */
+.balances-container {
+  background: var(--tg-theme-bg-color, #2c2c2e);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.balances-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.balance-error {
+  background: rgba(255, 69, 58, 0.1);
+  color: #ff453a;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.balances-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.balance-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.balance-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+}
+
+.balance-info {
+  flex: 1;
+}
+
+.balance-label {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  margin-bottom: 4px;
+}
+
+.balance-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.balance-symbol {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tg-theme-hint-color, #8e8e93);
+}
+
+.balance-loading {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.balance-updated {
+  font-size: 11px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  margin-top: 8px;
+  text-align: right;
+}
+
+.wallet-network {
+  display: flex;
+  justify-content: center;
+}
+
+.network-badge {
+  background: rgba(48, 209, 88, 0.1);
+  color: #30d158;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .disconnect-button {
@@ -54,7 +203,7 @@
   color: #ff453a;
   border: 1px solid rgba(255, 69, 58, 0.3);
   border-radius: 10px;
-  padding: 10px 24px;
+  padding: 12px 24px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -64,4 +213,10 @@
 
 .disconnect-button:hover {
   background: rgba(255, 69, 58, 0.2);
+}
+
+@media (max-width: 400px) {
+  .balances-grid {
+    grid-template-columns: 1fr;
+  }
 }
