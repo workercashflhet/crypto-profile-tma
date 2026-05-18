@@ -10,16 +10,25 @@
   box-sizing: border-box;
 }
 
-.profile-avatar img,
-.avatar-placeholder {
+.profile-avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 12px;
+}
+
+.profile-avatar img {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   background: var(--tg-theme-button-color, #2ea6ff);
   color: white;
   display: flex;

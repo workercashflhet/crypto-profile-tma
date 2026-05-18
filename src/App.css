@@ -39,17 +39,9 @@ body {
 
 .app-content {
   flex: 1;
-  padding: 24px 16px;
-  padding-bottom: calc(var(--bottom-nav-height) + 24px);
+  padding: 16px;
+  padding-bottom: calc(var(--bottom-nav-height) + 16px);
   overflow-y: auto;
-}
-
-.app-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  color: var(--tg-theme-text-color);
-  text-align: center;
 }
 
 /* Нижняя навигация */

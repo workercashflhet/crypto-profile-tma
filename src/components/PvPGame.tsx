@@ -58,7 +58,7 @@ const PvPGame: React.FC = () => {
     return parts.join(' + ');
   };
 
-  const calculateWinChance = (player: { totalBet: number; bets: { amount: number; currency: CurrencyType }[] }): string => {
+  const calculateWinChance = (player: { totalBet: number }): string => {
     if (!currentRound) return '0';
     
     const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolUsdt;
@@ -69,11 +69,7 @@ const PvPGame: React.FC = () => {
 
   return (
     <div className="pvp-game">
-      <div className="pvp-header">
-        <h2 className="pvp-title">🎰 PvP Lucky Wheel</h2>
-        <p className="pvp-subtitle">Multiplayer • Multiple bets allowed</p>
-      </div>
-
+      {/* Баланс */}
       <div className="player-balance-bar">
         <div 
           className={`balance-item-small ${selectedCurrency === 'ton' ? 'active-currency' : ''}`}
@@ -91,14 +87,12 @@ const PvPGame: React.FC = () => {
         </div>
       </div>
 
+      {/* Мои ставки */}
       {playerBets.length > 0 && (
         <div className="my-bets-bar">
           <span>My bets: {formatPlayerBets({ bets: playerBets })}</span>
           <span className="bets-count">
-            {calculateWinChance({ 
-              totalBet: myTotalBet, 
-              bets: playerBets 
-            })}%
+            {calculateWinChance({ totalBet: myTotalBet })}%
           </span>
         </div>
       )}
@@ -157,13 +151,9 @@ const PvPGame: React.FC = () => {
               value={betAmount || ''}
               onChange={(e) => {
                 const value = e.target.value;
-                // Убираем ведущие нули, кроме случая когда введен только 0
                 if (value === '') {
                   setBetAmount(0);
-                } else if (value === '0') {
-                  setBetAmount(0);
                 } else {
-                  // Убираем ведущие нули
                   const parsed = parseInt(value.replace(/^0+/, ''), 10);
                   if (!isNaN(parsed)) {
                     setBetAmount(parsed);

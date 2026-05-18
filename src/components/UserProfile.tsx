@@ -8,7 +8,6 @@ const UserProfile: React.FC = () => {
   const [avatarError, setAvatarError] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
 
-  // Пытаемся загрузить фото при монтировании
   useEffect(() => {
     if (user && !user.photoUrl && !isLoading) {
       loadUserPhoto();
@@ -16,14 +15,13 @@ const UserProfile: React.FC = () => {
   }, [user?.id]);
 
   if (isLoading) {
-    return <div className="profile-container">Loading user data...</div>;
+    return <div className="profile-container">Loading...</div>;
   }
 
   if (!user) {
     return <div className="profile-container">Could not load user profile.</div>;
   }
 
-  // Формируем URL аватарки
   const getAvatarUrl = (): string => {
     if (avatarError) {
       return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
@@ -33,7 +31,6 @@ const UserProfile: React.FC = () => {
       return user.photoUrl;
     }
     
-    // Пробуем стандартный URL Telegram
     return `https://t.me/i/userpic/320/${user.id}.jpg`;
   };
 
@@ -47,38 +44,37 @@ const UserProfile: React.FC = () => {
     setAvatarLoaded(true);
   };
 
+  // Формируем отображаемое имя
+  const displayName = user.firstName || 'User';
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
+
   return (
     <div className="profile-container">
       <div className="profile-avatar">
-        <img 
-          src={getAvatarUrl()} 
-          alt={`${user.firstName}'s avatar`}
-          onError={handleAvatarError}
-          onLoad={handleAvatarLoad}
-          style={{ 
-            display: avatarLoaded || avatarError ? 'block' : 'none',
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            objectFit: 'cover'
-          }}
-        />
-        {!avatarLoaded && !avatarError && (
-          <div className="avatar-placeholder">
-            {user.firstName.charAt(0)}
-          </div>
+        {!avatarError && (
+          <img 
+            src={getAvatarUrl()} 
+            alt={fullName}
+            onError={handleAvatarError}
+            onLoad={handleAvatarLoad}
+            style={{ 
+              display: avatarLoaded ? 'block' : 'none',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              objectFit: 'cover'
+            }}
+          />
         )}
-        {avatarError && (
+        {(!avatarLoaded || avatarError) && (
           <div className="avatar-placeholder">
-            {user.firstName.charAt(0)}
+            {displayName.charAt(0).toUpperCase()}
           </div>
         )}
       </div>
       <div className="profile-info">
         <div className="profile-name">
-          <h2>
-            {user.firstName} {user.lastName || ''}
-          </h2>
+          <h2>{fullName}</h2>
           {user.isPremium && (
             <span className="premium-badge" title="Telegram Premium">
               <img src={premiumStarIcon} alt="Premium Star" />
@@ -88,7 +84,6 @@ const UserProfile: React.FC = () => {
         {user.username && (
           <p className="profile-username">@{user.username}</p>
         )}
-        <p className="profile-id">ID: {user.id}</p>
       </div>
     </div>
   );
