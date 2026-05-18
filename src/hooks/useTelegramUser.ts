@@ -27,22 +27,19 @@ export const useTelegramUser = (): {
   const [user, setUser] = useState<TelegramUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Функция для загрузки фото через Telegram Web App API
   const loadUserPhoto = useCallback(async () => {
     if (!user) return;
 
     try {
-      // @ts-ignore - Telegram WebApp API
+      // @ts-ignore
       const tg = window.Telegram?.WebApp;
       
       if (tg?.initDataUnsafe?.user?.photo_url) {
-        // Используем photo_url из initDataUnsafe
         const photoUrl = tg.initDataUnsafe.user.photo_url;
         setUser(prev => prev ? { ...prev, photoUrl } : prev);
         return;
       }
 
-      // Альтернативный способ через CloudStorage
       if (tg?.CloudStorage) {
         try {
           const photo = await new Promise<string | undefined>((resolve) => {
@@ -61,7 +58,6 @@ export const useTelegramUser = (): {
         }
       }
 
-      // Если API недоступен, пробуем стандартный URL
       const photoUrl = `https://t.me/i/userpic/320/${user.id}.jpg`;
       setUser(prev => prev ? { ...prev, photoUrl } : prev);
     } catch (error) {
@@ -80,7 +76,13 @@ export const useTelegramUser = (): {
           const tgUser = launchParams.tgWebAppData.user;
           const userId = Number(tgUser.id);
           
-          // Пытаемся получить фото из tgWebAppData
+          // ПРАВИЛЬНОЕ ИМЯ ИЗ TELEGRAM
+          const firstName = String(tgUser.firstName || '');
+          const lastName = tgUser.lastName ? String(tgUser.lastName) : undefined;
+          
+          // Если имя пустое, используем username или "User"
+          const displayName = firstName || tgUser.username || 'User';
+          
           let photoUrl: string | undefined;
           
           if (tgUser.photoUrl) {
@@ -89,8 +91,8 @@ export const useTelegramUser = (): {
           
           const userData: TelegramUser = {
             id: userId,
-            firstName: String(tgUser.firstName || 'User'),
-            lastName: tgUser.lastName ? String(tgUser.lastName) : undefined,
+            firstName: displayName,
+            lastName: lastName,
             username: tgUser.username ? String(tgUser.username) : undefined,
             photoUrl: photoUrl,
             isPremium: Boolean(tgUser.isPremium),
@@ -98,7 +100,6 @@ export const useTelegramUser = (): {
           
           setUser(userData);
           
-          // Если фото не загрузилось, пробуем альтернативные способы
           if (!photoUrl) {
             setTimeout(() => loadUserPhoto(), 500);
           }

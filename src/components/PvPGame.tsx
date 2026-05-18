@@ -154,10 +154,25 @@ const PvPGame: React.FC = () => {
             <input
               type="number"
               className="bet-input"
-              value={betAmount}
-              onChange={(e) => setBetAmount(Number(e.target.value))}
+              value={betAmount || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Убираем ведущие нули, кроме случая когда введен только 0
+                if (value === '') {
+                  setBetAmount(0);
+                } else if (value === '0') {
+                  setBetAmount(0);
+                } else {
+                  // Убираем ведущие нули
+                  const parsed = parseInt(value.replace(/^0+/, ''), 10);
+                  if (!isNaN(parsed)) {
+                    setBetAmount(parsed);
+                  }
+                }
+              }}
               min="1"
               max={maxBet}
+              placeholder="Enter amount"
             />
             <button 
               className="bet-adjust" 

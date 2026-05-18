@@ -4,6 +4,7 @@ import { useTelegramUser } from './useTelegramUser';
 import { useGameBalance } from './useGameBalance';
 
 const ROUND_DURATION = 30;
+const AUTO_RESET_DELAY = 10000; // 10 секунд после победы
 const PLAYER_COLORS: string[] = [
   '#2196F3', '#E91E63', '#00BCD4', '#FF9800', '#4CAF50',
   '#9C27B0', '#FF5722', '#795548', '#607D8B', '#CDDC39',
@@ -40,6 +41,7 @@ export const usePvPGame = () => {
   
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const initRound = useCallback(() => {
     if (!user) return;
@@ -60,7 +62,15 @@ export const usePvPGame = () => {
     setRotationAngle(0);
     setError(null);
     setPlayerBets([]);
+    
+    // Очищаем таймер автосброса
+    if (autoResetRef.current) {
+      clearTimeout(autoResetRef.current);
+      autoResetRef.current = null;
+    }
   }, [user]);
+
+  // ... (остальной код без изменений: addBotPlayer, useEffect ботов, useEffect таймера, placeBet, calculateSegments)
 
   const addBotPlayer = useCallback(() => {
     setCurrentRound(prev => {
@@ -119,7 +129,6 @@ export const usePvPGame = () => {
     });
   }, []);
 
-  // Боты
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') {
       if (botsTimerRef.current) {
@@ -141,7 +150,6 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status, addBotPlayer]);
 
-  // Таймер
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') return;
 
@@ -170,13 +178,11 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status]);
 
-  // Множественные ставки
   const placeBet = useCallback((amount: number, currency: CurrencyType) => {
     if (!user || !currentRound) return;
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
     if (amount <= 0) return;
 
-    // Проверяем баланс в зависимости от валюты
     if (currency === 'ton') {
       if (!hasEnoughTon(amount)) {
         setError(`Insufficient TON balance. You have ${balance.ton.toFixed(1)} TON`);
@@ -191,7 +197,6 @@ export const usePvPGame = () => {
       }
     }
 
-    // Списываем с баланса
     if (currency === 'ton') {
       withdrawTon(amount);
     } else {
@@ -204,10 +209,8 @@ export const usePvPGame = () => {
       timestamp: Date.now(),
     };
 
-    // Обновляем список ставок игрока
     setPlayerBets(prev => [...prev, newBet]);
 
-    // Обновляем раунд
     setCurrentRound(prev => {
       if (!prev) return prev;
 
@@ -215,7 +218,6 @@ export const usePvPGame = () => {
       let updatedPlayers: PvPPlayer[];
 
       if (existingPlayerIndex >= 0) {
-        // Игрок уже есть - добавляем ставку
         updatedPlayers = prev.players.map((p, i) => {
           if (i === existingPlayerIndex) {
             const updatedBets = [...p.bets, newBet];
@@ -224,13 +226,12 @@ export const usePvPGame = () => {
               ...p,
               bets: updatedBets,
               totalBet: newTotal,
-              currency: currency, // Обновляем валюту последней ставки
+              currency: currency,
             };
           }
           return p;
         });
       } else {
-        // Новый игрок
         const playerColors = prev.players.map(p => p.color);
         const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
         const assignedColor = availableColors.length > 0 
@@ -269,7 +270,6 @@ export const usePvPGame = () => {
       };
     });
 
-    // Добавляем ботов после первой ставки
     if (currentRound.players.length === 0) {
       setTimeout(() => {
         addBotPlayer();
@@ -280,11 +280,9 @@ export const usePvPGame = () => {
     return true;
   }, [user, currentRound, addBotPlayer, withdrawTon, withdrawUsdt, hasEnoughTon, hasEnoughUsdt, balance]);
 
-  // Вычисление сегментов на основе общей суммы ставок
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
 
-    // Считаем общий пул (TON + USDT с курсом 1:1 для простоты)
     const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolUsdt;
     
     let currentAngle = 0;
@@ -308,7 +306,6 @@ export const usePvPGame = () => {
     });
   }, [currentRound]);
 
-  // Спин
   const spinWheel = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return;
     if (isSpinning) return;
@@ -342,15 +339,19 @@ export const usePvPGame = () => {
           prev ? { ...prev, status: 'finished', winner: winnerPlayer! } : prev
         );
         
-        // Начисляем выигрыш текущему пользователю
         if (winnerPlayer.userId === user?.id && currentRound) {
           depositTon(currentRound.totalPoolTon);
           depositUsdt(currentRound.totalPoolUsdt);
         }
+        
+        // АВТОСБРОС ЧЕРЕЗ 10 СЕКУНД
+        autoResetRef.current = setTimeout(() => {
+          initRound();
+        }, AUTO_RESET_DELAY);
       }
       setIsSpinning(false);
     }, 5000);
-  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon, depositUsdt]);
+  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon, depositUsdt, initRound]);
 
   const resetRound = useCallback(() => {
     if (timerRef.current) {
@@ -361,6 +362,10 @@ export const usePvPGame = () => {
       clearInterval(botsTimerRef.current);
       botsTimerRef.current = null;
     }
+    if (autoResetRef.current) {
+      clearTimeout(autoResetRef.current);
+      autoResetRef.current = null;
+    }
     initRound();
   }, [initRound]);
 
@@ -369,6 +374,7 @@ export const usePvPGame = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (botsTimerRef.current) clearInterval(botsTimerRef.current);
+      if (autoResetRef.current) clearTimeout(autoResetRef.current);
     };
   }, [initRound]);
 
