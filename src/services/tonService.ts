@@ -1,9 +1,6 @@
-import { Address } from '@ton/ton';
 import axios from 'axios';
 
-// TON API endpoint для mainnet
 const TON_API_ENDPOINT = 'https://tonapi.io/v2';
-// Для тестнета используйте: 'https://testnet.tonapi.io/v2'
 
 // Получаем баланс кошелька в TON
 export const getTonBalance = async (address: string): Promise<number> => {
@@ -34,26 +31,5 @@ export const getUsdtBalance = async (address: string): Promise<number> => {
   } catch (error) {
     console.error('Error fetching USDT balance:', error);
     return 0;
-  }
-};
-
-// Получаем полную информацию о кошельке
-export const getWalletInfo = async (address: string) => {
-  try {
-    const response = await axios.get(`${TON_API_ENDPOINT}/accounts/${address}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching wallet info:', error);
-    return null;
-  }
-};
-
-// Проверяем, является ли адрес валидным адресом TON
-export const isValidTonAddress = (address: string): boolean => {
-  try {
-    Address.parse(address);
-    return true;
-  } catch {
-    return false;
   }
 };
