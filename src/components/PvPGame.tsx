@@ -11,6 +11,8 @@ const PvPGame: React.FC = () => {
     isSpinning,
     rotationAngle,
     winner,
+    error,
+    balance,
     calculateSegments,
     placeBet,
     spinWheel,
@@ -25,12 +27,8 @@ const PvPGame: React.FC = () => {
     }
   }, [currentRound?.status]);
 
-  // Функция для получения аватарки игрока
-  const getPlayerAvatar = (player: { avatar?: string; userId: number; firstName: string }) => {
-    if (player.avatar) {
-      return player.avatar; // Реальное фото из Telegram
-    }
-    // Мок-аватарка только если нет фото
+  const getPlayerAvatar = (player: { avatar?: string; userId: number }) => {
+    if (player.avatar) return player.avatar;
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`;
   };
 
@@ -40,6 +38,23 @@ const PvPGame: React.FC = () => {
         <h2 className="pvp-title">🎰 PvP Lucky Wheel</h2>
         <p className="pvp-subtitle">Multiplayer • Bet against real players!</p>
       </div>
+
+      {/* Баланс игрока */}
+      <div className="player-balance-bar">
+        <div className="balance-item-small">
+          <img src="/ton.png" alt="TON" className="balance-icon-small" />
+          <span className="balance-value-small">{balance.ton.toFixed(1)} TON</span>
+        </div>
+        <div className="balance-item-small">
+          <img src="/ustd.png" alt="USDT" className="balance-icon-small" />
+          <span className="balance-value-small">{balance.usdt.toFixed(1)} USDT</span>
+        </div>
+      </div>
+
+      {/* Ошибка */}
+      {error && (
+        <div className="error-message">{error}</div>
+      )}
 
       <div className="pvp-stats">
         <div className="stat-box">
@@ -78,10 +93,11 @@ const PvPGame: React.FC = () => {
               value={betAmount}
               onChange={(e) => setBetAmount(Number(e.target.value))}
               min="1"
+              max={balance.ton}
             />
             <button 
               className="bet-adjust" 
-              onClick={() => setBetAmount(betAmount + 5)}
+              onClick={() => setBetAmount(Math.min(balance.ton, betAmount + 5))}
             >
               +
             </button>
@@ -90,10 +106,13 @@ const PvPGame: React.FC = () => {
           <button 
             className="place-bet-button"
             onClick={() => placeBet(betAmount)}
+            disabled={betAmount > balance.ton}
           >
             🎯 Place Bet ({betAmount} TON)
           </button>
-          <p className="color-auto-text">Color assigned automatically</p>
+          <p className="color-auto-text">
+            Balance: {balance.ton.toFixed(1)} TON • Color assigned automatically
+          </p>
         </div>
       )}
 

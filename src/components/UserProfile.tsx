@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTelegramUser } from '../hooks/useTelegramUser';
 import premiumStarIcon from '../assets/premiumStar.svg';
 import './UserProfile.css';
 
 const UserProfile: React.FC = () => {
   const { user, isLoading } = useTelegramUser();
+  const [avatarError, setAvatarError] = useState(false);
 
   if (isLoading) {
     return <div className="profile-container">Loading user data...</div>;
@@ -14,22 +15,28 @@ const UserProfile: React.FC = () => {
     return <div className="profile-container">Could not load user profile.</div>;
   }
 
+  // Функция для получения URL аватарки
+  const getAvatarUrl = (): string => {
+    if (avatarError || !user.photoUrl) {
+      return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`;
+    }
+    return user.photoUrl;
+  };
+
   return (
     <div className="profile-container">
       <div className="profile-avatar">
-        {/* Если есть photoUrl, показываем аватар, иначе placeholder */}
-        {user.photoUrl ? (
-          <img src={user.photoUrl} alt={`${user.firstName}'s avatar`} />
-        ) : (
-          <div className="avatar-placeholder">{user.firstName.charAt(0)}</div>
-        )}
+        <img 
+          src={getAvatarUrl()} 
+          alt={`${user.firstName}'s avatar`}
+          onError={() => setAvatarError(true)}
+        />
       </div>
       <div className="profile-info">
         <div className="profile-name">
           <h2>
             {user.firstName} {user.lastName || ''}
           </h2>
-          {/* Отображаем иконку Premium только если пользователь премиум */}
           {user.isPremium && (
             <span className="premium-badge" title="Telegram Premium">
               <img src={premiumStarIcon} alt="Premium Star" />
@@ -39,6 +46,7 @@ const UserProfile: React.FC = () => {
         {user.username && (
           <p className="profile-username">@{user.username}</p>
         )}
+        <p className="profile-id">ID: {user.id}</p>
       </div>
     </div>
   );

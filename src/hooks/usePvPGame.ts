@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PvPRound, PvPPlayer } from '../types/pvp';
 import { useTelegramUser } from './useTelegramUser';
+import { useGameBalance } from './useGameBalance';
 
 const ROUND_DURATION = 30;
 const PLAYER_COLORS: string[] = [
@@ -18,11 +19,13 @@ const MOCK_PLAYERS: PvPPlayer[] = [
 
 export const usePvPGame = () => {
   const { user } = useTelegramUser();
+  const { balance, withdrawTon, depositTon } = useGameBalance();
   const [currentRound, setCurrentRound] = useState<PvPRound | null>(null);
   const [betAmount, setBetAmount] = useState<number>(10);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [winner, setWinner] = useState<PvPPlayer | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -42,6 +45,7 @@ export const usePvPGame = () => {
     setWinner(null);
     setIsSpinning(false);
     setRotationAngle(0);
+    setError(null);
   }, [user]);
 
   const addBotPlayer = useCallback(() => {
@@ -65,7 +69,6 @@ export const usePvPGame = () => {
         ? availableColors[Math.floor(Math.random() * availableColors.length)]
         : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
-      // У ботов нет реального фото, используем мок
       const newBotPlayer: PvPPlayer = {
         ...randomBot,
         bet: randomBet,
@@ -75,13 +78,12 @@ export const usePvPGame = () => {
 
       const updatedPlayers = [...prev.players, newBotPlayer];
       const updatedPool = updatedPlayers.reduce((sum, p) => sum + p.bet, 0);
-      const newStatus = prev.players.length === 0 ? 'active' : prev.status;
 
       return {
         ...prev,
         players: updatedPlayers,
         totalPool: updatedPool,
-        status: newStatus,
+        status: prev.players.length === 0 ? 'active' : prev.status,
       };
     });
   }, []);
@@ -143,6 +145,13 @@ export const usePvPGame = () => {
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
     if (amount <= 0) return;
 
+    // Проверяем баланс
+    if (!withdrawTon(amount)) {
+      setError('Insufficient TON balance');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
     const existingPlayer = currentRound.players.find(p => p.userId === user.id);
     if (existingPlayer) return;
 
@@ -152,13 +161,11 @@ export const usePvPGame = () => {
       ? availableColors[Math.floor(Math.random() * availableColors.length)]
       : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
-    // ИСПОЛЬЗУЕМ РЕАЛЬНОЕ ФОТО ИЗ TELEGRAM
-    // Если photoUrl есть - используем его, иначе undefined (будет fallback)
     const newPlayer: PvPPlayer = {
       userId: user.id,
       username: user.username || `user_${user.id}`,
       firstName: user.firstName,
-      avatar: user.photoUrl || undefined, // Реальное фото или undefined для fallback
+      avatar: user.photoUrl || undefined,
       bet: amount,
       color: assignedColor,
     };
@@ -182,7 +189,7 @@ export const usePvPGame = () => {
       addBotPlayer();
       setTimeout(() => addBotPlayer(), 1500);
     }, 1000);
-  }, [user, currentRound, addBotPlayer]);
+  }, [user, currentRound, addBotPlayer, withdrawTon]);
 
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
@@ -239,10 +246,15 @@ export const usePvPGame = () => {
         setCurrentRound(prev => 
           prev ? { ...prev, status: 'finished', winner: winnerPlayer! } : prev
         );
+        
+        // Начисляем выигрыш победителю (если это текущий пользователь)
+        if (winnerPlayer.userId === user?.id && currentRound) {
+          depositTon(currentRound.totalPool);
+        }
       }
       setIsSpinning(false);
     }, 5000);
-  }, [currentRound, isSpinning, calculateSegments]);
+  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon]);
 
   const resetRound = useCallback(() => {
     if (timerRef.current) {
@@ -271,6 +283,8 @@ export const usePvPGame = () => {
     isSpinning,
     rotationAngle,
     winner,
+    error,
+    balance,
     calculateSegments,
     placeBet,
     spinWheel,

@@ -15,7 +15,7 @@ const MOCK_USER: TelegramUser = {
   firstName: 'John',
   lastName: 'Doe',
   username: 'johndoe',
-  photoUrl: undefined, // У мок-юзера нет фото
+  photoUrl: undefined,
   isPremium: true,
 };
 
@@ -30,24 +30,26 @@ export const useTelegramUser = (): { user: TelegramUser | null; isLoading: boole
       if (launchParams.tgWebAppData?.user) {
         const tgUser = launchParams.tgWebAppData.user;
         
-        // Формируем URL фото профиля Telegram
+        // Формируем URL фото профиля
         let photoUrl: string | undefined;
+        
         if (tgUser.photoUrl) {
           photoUrl = String(tgUser.photoUrl);
         } else if (tgUser.id) {
-          // Если фото нет в данных, но можно попробовать получить через Telegram API
-          // Пока оставляем undefined, чтобы использовался fallback
-          photoUrl = undefined;
+          // Используем стандартный URL фото Telegram
+          photoUrl = `https://t.me/i/userpic/320/${tgUser.id}.jpg`;
         }
         
-        setUser({
+        const userData: TelegramUser = {
           id: Number(tgUser.id),
-          firstName: String(tgUser.firstName || ''),
+          firstName: String(tgUser.firstName || 'User'),
           lastName: tgUser.lastName ? String(tgUser.lastName) : undefined,
           username: tgUser.username ? String(tgUser.username) : undefined,
           photoUrl: photoUrl,
           isPremium: Boolean(tgUser.isPremium),
-        });
+        };
+        
+        setUser(userData);
       } else {
         console.warn('No Telegram user found. Using mock data.');
         setUser(MOCK_USER);
