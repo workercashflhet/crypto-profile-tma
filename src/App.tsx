@@ -5,9 +5,8 @@ import WalletConnect from './components/WalletConnect';
 import Balance from './components/Balance';
 import './App.css';
 
-// Манифест приложения для TonConnect
-const manifestUrl =
-  'https://raw.githubusercontent.com/ton-community/tutorials/main/03-wallet/vite/temp/manifest.json';
+// Используем относительный путь к локальному манифесту
+const manifestUrl = '/tonconnect-manifest.json';
 
 const AppContent: React.FC = () => {
   return (
