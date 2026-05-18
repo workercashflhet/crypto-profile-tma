@@ -150,8 +150,8 @@
   border-radius: 50%;
   object-fit: cover;
   /* Если иконки всё ещё большие, добавьте: */
-  max-width: 16px;
-  max-height: 16px;
+  max-width: 20px;
+  max-height: 20px;
 }
 
 .balance-info {
