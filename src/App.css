@@ -1,5 +1,4 @@
 :root {
-  /* Telegram-like dark theme variables */
   --tg-theme-bg-color: #17212b;
   --tg-theme-secondary-bg-color: #232e3c;
   --tg-theme-text-color: #ffffff;
@@ -7,6 +6,7 @@
   --tg-theme-link-color: #6ab2f2;
   --tg-theme-button-color: #2ea6ff;
   --tg-theme-button-text-color: #ffffff;
+  --bottom-nav-height: 70px;
 }
 
 *,
@@ -31,17 +31,69 @@ body {
 .app {
   max-width: 480px;
   margin: 0 auto;
-  padding: 24px 16px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  position: relative;
+}
+
+.app-content {
+  flex: 1;
+  padding: 24px 16px;
+  padding-bottom: calc(var(--bottom-nav-height) + 24px);
+  overflow-y: auto;
 }
 
 .app-title {
   font-size: 28px;
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   color: var(--tg-theme-text-color);
   text-align: center;
+}
+
+/* Нижняя навигация */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  height: var(--bottom-nav-height);
+  background: var(--tg-theme-secondary-bg-color);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 20px;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--tg-theme-hint-color);
+  transition: all 0.2s;
+  border-radius: 12px;
+}
+
+.nav-item.active {
+  color: var(--tg-theme-button-color);
+}
+
+.nav-icon {
+  font-size: 24px;
+}
+
+.nav-label {
+  font-size: 12px;
+  font-weight: 600;
 }
