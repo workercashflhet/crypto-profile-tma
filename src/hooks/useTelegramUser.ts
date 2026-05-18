@@ -17,8 +17,8 @@ const MOCK_USER: TelegramUser = {
   firstName: 'John',
   lastName: 'Doe',
   username: 'johndoe',
-  photoUrl: 'https://avatars.githubusercontent.com/u/1?v=4', // Пример аватара
-  isPremium: true, // Для теста отображения звезды
+  photoUrl: 'https://avatars.githubusercontent.com/u/1?v=4',
+  isPremium: true,
 };
 
 export const useTelegramUser = (): { user: TelegramUser | null; isLoading: boolean } => {
@@ -28,17 +28,18 @@ export const useTelegramUser = (): { user: TelegramUser | null; isLoading: boole
   useEffect(() => {
     try {
       // Попытка получить реальные данные из Telegram Mini App окружения
-      const { initData } = retrieveLaunchParams();
-      const telegramUser = initData?.user;
-
-      if (telegramUser) {
+      const launchParams = retrieveLaunchParams();
+      
+      // Проверяем наличие данных пользователя через tgWebAppData
+      if (launchParams.tgWebAppData?.user) {
+        const tgUser = launchParams.tgWebAppData.user;
         setUser({
-          id: telegramUser.id,
-          firstName: telegramUser.firstName,
-          lastName: telegramUser.lastName,
-          username: telegramUser.username,
-          photoUrl: telegramUser.photoUrl,
-          isPremium: telegramUser.isPremium || false,
+          id: Number(tgUser.id),
+          firstName: String(tgUser.firstName || ''),
+          lastName: tgUser.lastName ? String(tgUser.lastName) : undefined,
+          username: tgUser.username ? String(tgUser.username) : undefined,
+          photoUrl: tgUser.photoUrl ? String(tgUser.photoUrl) : undefined,
+          isPremium: Boolean(tgUser.isPremium),
         });
       } else {
         // Используем мок-данные, если приложение открыто вне Telegram
