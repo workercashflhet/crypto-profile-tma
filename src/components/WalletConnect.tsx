@@ -36,6 +36,13 @@ const WalletConnect: React.FC = () => {
         <div className="wallet-address-section">
           <div className="wallet-label">Address</div>
           <div className="wallet-address">{shortAddress}</div>
+          <button 
+            onClick={() => navigator.clipboard.writeText(wallet.account.address)}
+            className="copy-button"
+            title="Copy address"
+          >
+            📋
+          </button>
         </div>
 
         {/* Балансы */}
@@ -48,21 +55,39 @@ const WalletConnect: React.FC = () => {
           
           <div className="balances-grid">
             <div className="balance-item">
-              <div className="balance-icon">💎</div>
+              <div className="balance-icon">
+                <img src="/ton.png" alt="TON" className="token-icon" />
+              </div>
               <div className="balance-info">
                 <div className="balance-label">TON</div>
                 <div className="balance-value">
-                  {balances.isLoading ? '...' : balances.ton.toFixed(4)}
+                  {balances.isLoading ? (
+                    <span className="balance-loading">...</span>
+                  ) : (
+                    <>
+                      {balances.ton.toFixed(4)}
+                      <span className="balance-symbol"> TON</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
             
             <div className="balance-item">
-              <div className="balance-icon">💵</div>
+              <div className="balance-icon">
+                <img src="/usdt.png" alt="USDT" className="token-icon" />
+              </div>
               <div className="balance-info">
                 <div className="balance-label">USDT</div>
                 <div className="balance-value">
-                  {balances.isLoading ? '...' : balances.usdt.toFixed(2)}
+                  {balances.isLoading ? (
+                    <span className="balance-loading">...</span>
+                  ) : (
+                    <>
+                      {balances.usdt.toFixed(2)}
+                      <span className="balance-symbol"> USDT</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
