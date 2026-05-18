@@ -6,7 +6,7 @@ interface GameBalance {
   usdt: number;
 }
 
-const STORAGE_KEY = 'game_balance_v2'; // Новая версия для сброса
+const STORAGE_KEY = 'game_balance_v3'; // Новая версия для сброса
 
 // Флаг для принудительного пополнения
 const REFILL_AMOUNT = {
