@@ -46,7 +46,7 @@ export const useTelegramUser = (): {
       if (tg?.CloudStorage) {
         try {
           const photo = await new Promise<string | undefined>((resolve) => {
-            tg.CloudStorage.getItem('user_photo', (err, value) => {
+            tg.CloudStorage.getItem('user_photo', (err: Error | null, value: string | null) => {
               if (!err && value) resolve(value);
               else resolve(undefined);
             });
