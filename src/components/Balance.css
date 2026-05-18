@@ -1,0 +1,55 @@
+.balance-container {
+  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.balance-header {
+  color: var(--tg-theme-hint-color, #8e8e93);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-amount {
+  color: var(--tg-theme-text-color, #ffffff);
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.balance-currency {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--tg-theme-hint-color, #8e8e93);
+}
+
+.faucet-button {
+  background: var(--tg-theme-button-color, #2ea6ff);
+  color: var(--tg-theme-button-text-color, #ffffff);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 12px;
+  transition: opacity 0.2s ease;
+}
+
+.faucet-button:hover {
+  opacity: 0.8;
+}
+
+.balance-hint {
+  color: var(--tg-theme-hint-color, #8e8e93);
+  font-size: 12px;
+  margin: 0;
+}

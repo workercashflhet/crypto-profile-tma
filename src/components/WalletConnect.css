@@ -1,0 +1,67 @@
+.wallet-container {
+  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.connect-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.connect-prompt {
+  color: var(--tg-theme-text-color, #ffffff);
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+/* Стандартная кнопка TonConnect UI рендерится внутри контейнера */
+.ton-connect-custom {
+  width: 100%;
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-address {
+  background: var(--tg-theme-bg-color, #2c2c2e);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color, #ffffff);
+  letter-spacing: 0.5px;
+}
+
+.wallet-status {
+  color: #30d158; /* Зеленый, как индикатор успеха */
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.disconnect-button {
+  background: rgba(255, 69, 58, 0.1);
+  color: #ff453a;
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.disconnect-button:hover {
+  background: rgba(255, 69, 58, 0.2);
+}
