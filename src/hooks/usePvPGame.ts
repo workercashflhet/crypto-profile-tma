@@ -3,7 +3,7 @@ import { PvPRound, PvPPlayer } from '../types/pvp';
 import { useTelegramUser } from './useTelegramUser';
 
 const ROUND_DURATION = 30; // секунд
-const COLORS = ['#2196F3', '#E91E63', '#00BCD4']; // blue, pink, cyan
+const COLORS: string[] = ['#2196F3', '#E91E63', '#00BCD4']; // blue, pink, cyan
 
 export const usePvPGame = () => {
   const { user } = useTelegramUser();
@@ -13,7 +13,7 @@ export const usePvPGame = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [winner, setWinner] = useState<PvPPlayer | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Инициализация нового раунда
   const initRound = useCallback(() => {
@@ -45,8 +45,6 @@ export const usePvPGame = () => {
         const newTimeLeft = prev.timeLeft - 1;
         
         if (newTimeLeft <= 0) {
-          // Время вышло, запускаем спин
-          if (timerRef.current) clearInterval(timerRef.current);
           return { ...prev, timeLeft: 0, status: 'spinning' };
         }
         
@@ -55,7 +53,10 @@ export const usePvPGame = () => {
     }, 1000);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [currentRound?.status]);
 
@@ -84,7 +85,6 @@ export const usePvPGame = () => {
       const updatedPlayers = [...prev.players, newPlayer];
       const updatedPool = updatedPlayers.reduce((sum, p) => sum + p.bet, 0);
       
-      // Если это первая ставка, запускаем таймер
       const newStatus = prev.players.length === 0 ? 'active' : prev.status;
 
       return {
@@ -94,20 +94,7 @@ export const usePvPGame = () => {
         status: newStatus,
       };
     });
-
-    // Если это первая ставка, запускаем раунд
-    if (currentRound.players.length === 0) {
-      startRound();
-    }
   }, [user, currentRound]);
-
-  // Запуск раунда
-  const startRound = useCallback(() => {
-    setCurrentRound(prev => {
-      if (!prev) return prev;
-      return { ...prev, status: 'active', timeLeft: ROUND_DURATION };
-    });
-  }, []);
 
   // Вычисление углов секторов
   const calculateSegments = useCallback(() => {
@@ -146,14 +133,12 @@ export const usePvPGame = () => {
     const totalRotation = 3600 + randomAngle; // 10 полных оборотов + случайный угол
     setRotationAngle(totalRotation);
 
-    // Определяем победителя через 5 секунд (длительность анимации)
+    // Определяем победителя через 5 секунд
     setTimeout(() => {
       const segments = calculateSegments();
       
-      // Нормализуем угол
       const normalizedAngle = randomAngle;
       
-      // Находим победителя
       let winnerPlayer: PvPPlayer | undefined;
       
       for (const segment of segments) {
@@ -163,7 +148,6 @@ export const usePvPGame = () => {
         }
       }
 
-      // Если не нашли (крайний случай)
       if (!winnerPlayer && segments.length > 0) {
         winnerPlayer = segments[0].player;
       }
@@ -181,7 +165,10 @@ export const usePvPGame = () => {
 
   // Сброс раунда
   const resetRound = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     initRound();
   }, [initRound]);
 
@@ -189,7 +176,10 @@ export const usePvPGame = () => {
   useEffect(() => {
     initRound();
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [initRound]);
 

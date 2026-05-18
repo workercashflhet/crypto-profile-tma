@@ -25,7 +25,7 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
   const createGradient = () => {
     if (segments.length === 0) return '';
 
-    const gradients = segments.map((segment, index) => {
+    const gradients = segments.map((segment) => {
       const startPercent = (segment.startAngle / 360) * 100;
       const endPercent = (segment.endAngle / 360) * 100;
       
@@ -48,7 +48,6 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
         >
           {segments.map((segment, index) => {
             const midAngle = (segment.startAngle + segment.endAngle) / 2;
-            const radians = (midAngle * Math.PI) / 180;
             
             return (
               <div

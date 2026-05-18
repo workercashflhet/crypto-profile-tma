@@ -24,10 +24,10 @@ const PvPGame: React.FC = () => {
 
   // Автоматический спин когда время выходит
   useEffect(() => {
-    if (currentRound?.status === 'spinning' && currentRound.players.length > 0) {
+    if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
       spinWheel();
     }
-  }, [currentRound?.status]);
+  }, [currentRound?.status, isSpinning, spinWheel, currentRound?.players.length]);
 
   return (
     <div className="pvp-game">
@@ -66,7 +66,7 @@ const PvPGame: React.FC = () => {
       {currentRound?.status !== 'finished' && (
         <div className="bet-section">
           <div className="color-selector">
-            {COLORS.map((color, index) => (
+            {COLORS.map((color) => (
               <button
                 key={color}
                 className={`color-button ${selectedColor === color ? 'selected' : ''}`}
