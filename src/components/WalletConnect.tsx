@@ -5,6 +5,7 @@ import {
   TonConnectButton,
 } from '@tonconnect/ui-react';
 import { useWalletBalance } from '../hooks/useWalletBalance';
+import { formatAddress } from '../utils/addressUtils';
 import './WalletConnect.css';
 
 const WalletConnect: React.FC = () => {
@@ -25,18 +26,19 @@ const WalletConnect: React.FC = () => {
     );
   }
 
-  // Получаем полный адрес из кошелька
-  const fullAddress = wallet.account.address;
+  // Конвертируем адрес в user-friendly формат
+  const rawAddress = wallet.account.address;
+  const friendlyAddress = formatAddress(rawAddress);
   
   // Форматированный адрес для отображения
   const displayAddress = showFullAddress 
-    ? fullAddress 
-    : `${fullAddress.slice(0, 8)}...${fullAddress.slice(-8)}`;
+    ? friendlyAddress 
+    : `${friendlyAddress.slice(0, 8)}...${friendlyAddress.slice(-8)}`;
 
   // Копирование адреса
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(fullAddress);
+      await navigator.clipboard.writeText(friendlyAddress);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -60,7 +62,7 @@ const WalletConnect: React.FC = () => {
           <div className="wallet-address-wrapper">
             <div 
               className="wallet-address-full" 
-              title={fullAddress}
+              title={friendlyAddress}
               onClick={() => setShowFullAddress(!showFullAddress)}
             >
               {displayAddress}
