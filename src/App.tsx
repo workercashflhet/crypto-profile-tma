@@ -5,7 +5,6 @@ import WalletConnect from './components/WalletConnect';
 import Balance from './components/Balance';
 import './App.css';
 
-// Используем raw URL с GitHub (всегда доступен)
 const manifestUrl = 'https://raw.githubusercontent.com/workercashflhet/crypto-profile-tma/main/public/tonconnect-manifest.json';
 
 const AppContent: React.FC = () => {

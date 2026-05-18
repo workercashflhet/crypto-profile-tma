@@ -76,7 +76,6 @@ const WalletInfo: React.FC = () => {
 
   if (!wallet) return null;
 
-  // Форматирование адреса
   const shortAddress = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-6)}`;
 
   const handleDisconnect = () => {
@@ -104,7 +103,6 @@ const WalletInfo: React.FC = () => {
         </button>
       </div>
       
-      {/* Отображение балансов */}
       <BalanceDisplay
         ton={balances.ton}
         usdt={balances.usdt}
@@ -126,7 +124,6 @@ const WalletInfo: React.FC = () => {
   );
 };
 
-// Основной компонент
 const WalletConnect: React.FC = () => {
   const wallet = useTonWallet();
 
