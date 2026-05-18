@@ -6,14 +6,19 @@ interface GameBalance {
   usdt: number;
 }
 
-const STORAGE_KEY = 'game_balance';
+const STORAGE_KEY = 'game_balance_v2'; // Новая версия для сброса
+
+// Флаг для принудительного пополнения
+const REFILL_AMOUNT = {
+  ton: 1000,
+  usdt: 1000,
+};
 
 export const useGameBalance = () => {
   const { user } = useTelegramUser();
   const [balance, setBalance] = useState<GameBalance>({ ton: 0, usdt: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка баланса при старте
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -22,41 +27,54 @@ export const useGameBalance = () => {
 
     try {
       const stored = localStorage.getItem(`${STORAGE_KEY}_${user.id}`);
+      const refilled = localStorage.getItem(`${STORAGE_KEY}_refilled_${user.id}`);
       
       if (stored) {
         const parsed = JSON.parse(stored);
-        setBalance({
-          ton: parsed.ton || 0,
-          usdt: parsed.usdt || 0,
-        });
+        
+        // Проверяем, было ли пополнение в этой версии
+        if (!refilled) {
+          // Пополняем баланс
+          const newBalance = {
+            ton: (parsed.ton || 0) + REFILL_AMOUNT.ton,
+            usdt: (parsed.usdt || 0) + REFILL_AMOUNT.usdt,
+          };
+          localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
+          localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
+          setBalance(newBalance);
+        } else {
+          setBalance({
+            ton: parsed.ton || 0,
+            usdt: parsed.usdt || 0,
+          });
+        }
       } else {
-        // Стартовый бонус для новых игроков
+        // Новый пользователь - стартовый бонус
         const initialBalance: GameBalance = {
-          ton: 100, // 100 TON для теста
-          usdt: 1000, // 1000 USDT для теста
+          ton: 1000,
+          usdt: 1000,
         };
         localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(initialBalance));
+        localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
         setBalance(initialBalance);
       }
     } catch (error) {
       console.error('Error loading game balance:', error);
-      // Устанавливаем дефолтный баланс при ошибке
-      const defaultBalance: GameBalance = { ton: 100, usdt: 1000 };
+      const defaultBalance: GameBalance = { ton: 1000, usdt: 1000 };
       setBalance(defaultBalance);
       localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(defaultBalance));
+      localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
     } finally {
       setIsLoading(false);
     }
   }, [user]);
 
-  // Сохранение баланса
   const saveBalance = useCallback((newBalance: GameBalance) => {
     if (!user) return;
     localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
     setBalance(newBalance);
   }, [user]);
 
-  // Пополнение баланса
   const depositTon = useCallback((amount: number) => {
     setBalance(prev => {
       const newBalance = { ...prev, ton: prev.ton + amount };
@@ -77,7 +95,6 @@ export const useGameBalance = () => {
     });
   }, [user]);
 
-  // Списание средств
   const withdrawTon = useCallback((amount: number): boolean => {
     let success = false;
     setBalance(prev => {
@@ -106,7 +123,6 @@ export const useGameBalance = () => {
     return success;
   }, [user]);
 
-  // Проверка достаточности средств
   const hasEnoughTon = useCallback((amount: number): boolean => {
     return balance.ton >= amount;
   }, [balance.ton]);

@@ -418,3 +418,35 @@
 .stat-value.small {
   font-size: 12px;
 }
+
+.my-bets-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(46, 166, 255, 0.12);
+  border: 1px solid rgba(46, 166, 255, 0.2);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.bets-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tg-theme-button-color, #2ea6ff);
+}
+
+.player-bet {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.player-share {
+  font-size: 11px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  text-align: right;
+}

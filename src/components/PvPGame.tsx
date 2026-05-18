@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { usePvPGame } from '../hooks/usePvPGame';
+import { CurrencyType } from '../types/pvp';
 import LuckyWheel from './LuckyWheel';
 import './PvPGame.css';
 
@@ -43,6 +44,31 @@ const PvPGame: React.FC = () => {
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.usdt;
 
+  // Форматирование ставок игрока для отображения
+  const formatPlayerBets = (player: { bets: { amount: number; currency: CurrencyType }[] }): string => {
+    const tonBets = player.bets.filter(b => b.currency === 'ton');
+    const usdtBets = player.bets.filter(b => b.currency === 'usdt');
+    
+    const tonTotal = tonBets.reduce((sum, b) => sum + b.amount, 0);
+    const usdtTotal = usdtBets.reduce((sum, b) => sum + b.amount, 0);
+    
+    const parts: string[] = [];
+    if (tonTotal > 0) parts.push(`${tonTotal} TON`);
+    if (usdtTotal > 0) parts.push(`${usdtTotal} USDT`);
+    
+    return parts.join(' + ');
+  };
+
+  // Расчет шанса выигрыша игрока
+  const calculateWinChance = (player: { totalBet: number; bets: { amount: number; currency: CurrencyType }[] }): string => {
+    if (!currentRound) return '0';
+    
+    const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolUsdt;
+    if (totalPoolValue === 0) return '0';
+    
+    return ((player.totalBet / totalPoolValue) * 100).toFixed(1);
+  };
+
   return (
     <div className="pvp-game">
       <div className="pvp-header">
@@ -69,10 +95,17 @@ const PvPGame: React.FC = () => {
       </div>
 
       {/* Мои ставки */}
-      {myTotalBet > 0 && (
+      {playerBets.length > 0 && (
         <div className="my-bets-bar">
-          <span>My bets: {myTotalBet} {selectedCurrency.toUpperCase()}</span>
-          <span className="bets-count">({playerBets.length} bet{playerBets.length > 1 ? 's' : ''})</span>
+          <span>My bets: {formatPlayerBets({ bets: playerBets })}</span>
+          {currentRound && (
+            <span className="bets-count">
+              Win chance: {calculateWinChance({ 
+                totalBet: myTotalBet, 
+                bets: playerBets 
+              })}%
+            </span>
+          )}
         </div>
       )}
 
@@ -102,7 +135,6 @@ const PvPGame: React.FC = () => {
 
       {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
         <div className="bet-section">
-          {/* Выбор валюты */}
           <div className="currency-toggle">
             <button
               className={`currency-btn ${selectedCurrency === 'ton' ? 'active' : ''}`}
@@ -204,9 +236,9 @@ const PvPGame: React.FC = () => {
               <span className="player-username">@{player.username}</span>
             </div>
             <div className="player-stats">
-              <span className="player-bet">{player.totalBet} {player.currency.toUpperCase()}</span>
+              <span className="player-bet">{formatPlayerBets(player)}</span>
               <span className="player-share">
-                ({player.bets.length} bet{player.bets.length > 1 ? 's' : ''})
+                {calculateWinChance(player)}% win chance
               </span>
             </div>
           </div>
