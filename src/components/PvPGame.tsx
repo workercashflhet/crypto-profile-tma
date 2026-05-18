@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { usePvPGame } from '../hooks/usePvPGame';
-import { CurrencyType } from '../types/pvp';
 import LuckyWheel from './LuckyWheel';
 import './PvPGame.css';
 
