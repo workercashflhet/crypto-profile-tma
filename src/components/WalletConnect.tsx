@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   useTonConnectUI,
   useTonWallet,
@@ -11,6 +11,8 @@ const WalletConnect: React.FC = () => {
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const balances = useWalletBalance();
+  const [showFullAddress, setShowFullAddress] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!wallet) {
     return (
@@ -23,7 +25,24 @@ const WalletConnect: React.FC = () => {
     );
   }
 
-  const shortAddress = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-6)}`;
+  // Получаем полный адрес из кошелька
+  const fullAddress = wallet.account.address;
+  
+  // Форматированный адрес для отображения
+  const displayAddress = showFullAddress 
+    ? fullAddress 
+    : `${fullAddress.slice(0, 8)}...${fullAddress.slice(-8)}`;
+
+  // Копирование адреса
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(fullAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   return (
     <div className="wallet-container">
@@ -31,18 +50,41 @@ const WalletConnect: React.FC = () => {
         <div className="wallet-header">
           <div className="wallet-status-indicator" />
           <span className="wallet-status-text">Connected</span>
+          <span className="wallet-chain-badge">
+            {wallet.account.chain === '-239' ? 'Mainnet' : 'Testnet'}
+          </span>
         </div>
         
         <div className="wallet-address-section">
-          <div className="wallet-label">Address</div>
-          <div className="wallet-address">{shortAddress}</div>
-          <button 
-            onClick={() => navigator.clipboard.writeText(wallet.account.address)}
-            className="copy-button"
-            title="Copy address"
-          >
-            📋
-          </button>
+          <div className="wallet-label">Wallet Address</div>
+          <div className="wallet-address-wrapper">
+            <div 
+              className="wallet-address-full" 
+              title={fullAddress}
+              onClick={() => setShowFullAddress(!showFullAddress)}
+            >
+              {displayAddress}
+            </div>
+            <div className="wallet-actions">
+              <button 
+                onClick={() => setShowFullAddress(!showFullAddress)}
+                className="address-toggle-button"
+                title={showFullAddress ? "Show short address" : "Show full address"}
+              >
+                {showFullAddress ? '👁️' : '👁️‍🗨️'}
+              </button>
+              <button 
+                onClick={handleCopy}
+                className="copy-button"
+                title="Copy address"
+              >
+                {copied ? '✅' : '📋'}
+              </button>
+            </div>
+          </div>
+          {copied && (
+            <div className="copied-notification">Address copied!</div>
+          )}
         </div>
 
         {/* Балансы */}
@@ -75,7 +117,7 @@ const WalletConnect: React.FC = () => {
             
             <div className="balance-item">
               <div className="balance-icon">
-                <img src="/usdt.png" alt="USDT" className="token-icon" />
+                <img src="/ustd.png" alt="USDT" className="token-icon" />
               </div>
               <div className="balance-info">
                 <div className="balance-label">USDT</div>

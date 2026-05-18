@@ -57,41 +57,91 @@
   font-weight: 500;
 }
 
-.wallet-address-section {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--tg-theme-bg-color, #2c2c2e);
-  padding: 12px;
+.wallet-chain-badge {
+  margin-left: auto;
+  background: rgba(48, 209, 88, 0.1);
+  color: #30d158;
+  padding: 2px 8px;
   border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Секция адреса */
+.wallet-address-section {
+  background: var(--tg-theme-bg-color, #2c2c2e);
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .wallet-label {
   font-size: 12px;
   color: var(--tg-theme-hint-color, #8e8e93);
   text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
-.wallet-address {
+.wallet-address-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-address-full {
   flex: 1;
-  font-family: monospace;
-  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
   font-weight: 500;
   color: var(--tg-theme-text-color, #ffffff);
-}
-
-.copy-button {
-  background: none;
-  border: none;
-  font-size: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
+  word-break: break-all;
   transition: background 0.2s;
+  line-height: 1.4;
 }
 
+.wallet-address-full:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.wallet-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.address-toggle-button,
+.copy-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+}
+
+.address-toggle-button:hover,
 .copy-button:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.copied-notification {
+  color: #30d158;
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Стили для балансов */
@@ -140,8 +190,6 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
 }
 
 .token-icon {
@@ -149,9 +197,6 @@
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  /* Если иконки всё ещё большие, добавьте: */
-  max-width: 32px;
-  max-height: 32px;
 }
 
 .balance-info {
@@ -207,5 +252,9 @@
 @media (max-width: 400px) {
   .balances-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .wallet-address-full {
+    font-size: 11px;
   }
 }
