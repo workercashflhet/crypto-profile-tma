@@ -3,27 +3,42 @@ import { PvPRound, PvPPlayer } from '../types/pvp';
 import { useTelegramUser } from './useTelegramUser';
 
 const ROUND_DURATION = 30;
-const COLORS: string[] = ['#2196F3', '#E91E63', '#00BCD4'];
+const PLAYER_COLORS: string[] = [
+  '#2196F3', '#E91E63', '#00BCD4', '#FF9800', '#4CAF50',
+  '#9C27B0', '#FF5722', '#795548', '#607D8B', '#CDDC39',
+];
 
-// Мок-игроки для мультиплеера
+// Мок-игроки с аватарками
 const MOCK_PLAYERS: PvPPlayer[] = [
-  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: 'blue' },
-  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: 'pink' },
-  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: 'cyan' },
-  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: 'blue' },
-  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: 'pink' },
+  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale' },
+  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=master' },
+  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=king' },
+  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=pro' },
+  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hodler' },
 ];
 
 export const usePvPGame = () => {
   const { user } = useTelegramUser();
   const [currentRound, setCurrentRound] = useState<PvPRound | null>(null);
   const [betAmount, setBetAmount] = useState<number>(10);
-  const [selectedColor, setSelectedColor] = useState<string>(COLORS[0]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [winner, setWinner] = useState<PvPPlayer | null>(null);
+  const [usedColors, setUsedColors] = useState<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Получение случайного неиспользованного цвета
+  const getRandomColor = useCallback(() => {
+    const availableColors = PLAYER_COLORS.filter(c => !usedColors.includes(c));
+    if (availableColors.length === 0) {
+      // Если все цвета использованы, сбрасываем и берем случайный
+      setUsedColors([]);
+      return PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
+    }
+    const color = availableColors[Math.floor(Math.random() * availableColors.length)];
+    return color;
+  }, [usedColors]);
 
   // Инициализация нового раунда
   const initRound = useCallback(() => {
@@ -42,16 +57,16 @@ export const usePvPGame = () => {
     setWinner(null);
     setIsSpinning(false);
     setRotationAngle(0);
+    setUsedColors([]);
   }, [user]);
 
-  // Добавление ботов-игроков для мультиплеера
+  // Добавление ботов-игроков
   const addBotPlayer = useCallback(() => {
     setCurrentRound(prev => {
       if (!prev) return prev;
       if (prev.status === 'finished' || prev.status === 'spinning') return prev;
-      if (prev.timeLeft <= 5) return prev; // Не добавляем в последние 5 секунд
+      if (prev.timeLeft <= 5) return prev;
 
-      // Выбираем случайного бота, который еще не в игре
       const availableBots = MOCK_PLAYERS.filter(
         bot => !prev.players.find(p => p.userId === bot.userId)
       );
@@ -59,13 +74,19 @@ export const usePvPGame = () => {
       if (availableBots.length === 0) return prev;
 
       const randomBot = availableBots[Math.floor(Math.random() * availableBots.length)];
-      const randomBet = Math.floor(Math.random() * 50) + 5; // 5-55 TON
-      const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+      const randomBet = Math.floor(Math.random() * 50) + 5;
+      
+      // Назначаем цвет боту
+      const playerColors = prev.players.map(p => p.color);
+      const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
+      const botColor = availableColors.length > 0 
+        ? availableColors[Math.floor(Math.random() * availableColors.length)]
+        : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
       const newBotPlayer: PvPPlayer = {
         ...randomBot,
         bet: randomBet,
-        color: randomColor as 'blue' | 'pink' | 'cyan',
+        color: botColor,
       };
 
       const updatedPlayers = [...prev.players, newBotPlayer];
@@ -91,7 +112,6 @@ export const usePvPGame = () => {
       return;
     }
 
-    // Добавляем ботов каждые 3-7 секунд
     botsTimerRef.current = setInterval(() => {
       const randomDelay = Math.random() * 4000 + 3000;
       setTimeout(() => {
@@ -119,7 +139,6 @@ export const usePvPGame = () => {
         
         if (newTimeLeft <= 0) {
           if (prev.players.length === 0) {
-            // Если нет игроков, начинаем новый раунд
             return { ...prev, timeLeft: ROUND_DURATION, status: 'waiting' };
           }
           return { ...prev, timeLeft: 0, status: 'spinning' };
@@ -137,8 +156,8 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status]);
 
-  // Добавление игрока в пул
-  const placeBet = useCallback((amount: number, color: string) => {
+  // Добавление игрока в пул (теперь без выбора цвета)
+  const placeBet = useCallback((amount: number) => {
     if (!user || !currentRound) return;
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
     if (amount <= 0) return;
@@ -146,13 +165,20 @@ export const usePvPGame = () => {
     const existingPlayer = currentRound.players.find(p => p.userId === user.id);
     if (existingPlayer) return;
 
+    // Автоматически назначаем цвет
+    const playerColors = currentRound.players.map(p => p.color);
+    const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
+    const assignedColor = availableColors.length > 0 
+      ? availableColors[Math.floor(Math.random() * availableColors.length)]
+      : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
+
     const newPlayer: PvPPlayer = {
       userId: user.id,
       username: user.username || `user_${user.id}`,
       firstName: user.firstName,
-      avatar: user.photoUrl,
+      avatar: user.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
       bet: amount,
-      color: color as 'blue' | 'pink' | 'cyan',
+      color: assignedColor,
     };
 
     setCurrentRound(prev => {
@@ -170,7 +196,7 @@ export const usePvPGame = () => {
       };
     });
 
-    // После ставки игрока, быстро добавляем 1-2 ботов
+    // Добавляем ботов после ставки игрока
     setTimeout(() => {
       addBotPlayer();
       setTimeout(() => addBotPlayer(), 1500);
@@ -265,8 +291,6 @@ export const usePvPGame = () => {
     currentRound,
     betAmount,
     setBetAmount,
-    selectedColor,
-    setSelectedColor,
     isSpinning,
     rotationAngle,
     winner,
@@ -274,6 +298,5 @@ export const usePvPGame = () => {
     placeBet,
     spinWheel,
     resetRound,
-    COLORS,
   };
 };

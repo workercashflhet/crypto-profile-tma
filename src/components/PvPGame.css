@@ -296,3 +296,18 @@
   font-size: 12px;
   opacity: 0.7;
 }
+
+.color-auto-text {
+  text-align: center;
+  font-size: 11px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+  margin-top: 8px;
+}
+
+.player-avatar-small {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}

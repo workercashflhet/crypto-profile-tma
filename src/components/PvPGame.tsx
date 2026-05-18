@@ -8,8 +8,6 @@ const PvPGame: React.FC = () => {
     currentRound,
     betAmount,
     setBetAmount,
-    selectedColor,
-    setSelectedColor,
     isSpinning,
     rotationAngle,
     winner,
@@ -17,12 +15,10 @@ const PvPGame: React.FC = () => {
     placeBet,
     spinWheel,
     resetRound,
-    COLORS,
   } = usePvPGame();
 
   const segments = calculateSegments();
 
-  // Автоматический спин когда время выходит
   useEffect(() => {
     if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
       spinWheel();
@@ -36,7 +32,6 @@ const PvPGame: React.FC = () => {
         <p className="pvp-subtitle">Multiplayer • Bet against real players!</p>
       </div>
 
-      {/* Статистика */}
       <div className="pvp-stats">
         <div className="stat-box">
           <div className="stat-label">Pool</div>
@@ -52,7 +47,6 @@ const PvPGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Колесо с таймером в центре */}
       <LuckyWheel 
         segments={segments} 
         rotationAngle={rotationAngle} 
@@ -60,20 +54,9 @@ const PvPGame: React.FC = () => {
         timeLeft={currentRound?.timeLeft || 0}
       />
 
-      {/* Ставка */}
+      {/* Ставка - без выбора цвета */}
       {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
         <div className="bet-section">
-          <div className="color-selector">
-            {COLORS.map((color) => (
-              <button
-                key={color}
-                className={`color-button ${selectedColor === color ? 'selected' : ''}`}
-                style={{ backgroundColor: color }}
-                onClick={() => setSelectedColor(color)}
-              />
-            ))}
-          </div>
-          
           <div className="bet-input-group">
             <button 
               className="bet-adjust" 
@@ -98,21 +81,20 @@ const PvPGame: React.FC = () => {
 
           <button 
             className="place-bet-button"
-            onClick={() => placeBet(betAmount, selectedColor)}
+            onClick={() => placeBet(betAmount)}
           >
             🎯 Place Bet ({betAmount} TON)
           </button>
+          <p className="color-auto-text">Color assigned automatically</p>
         </div>
       )}
 
-      {/* Статус спининга */}
       {currentRound?.status === 'spinning' && (
         <div className="spinning-status">
           <div className="spinning-text">🎰 Spinning...</div>
         </div>
       )}
 
-      {/* Результат */}
       {winner && (
         <div className="winner-section">
           <div className="winner-crown">👑</div>
@@ -128,12 +110,19 @@ const PvPGame: React.FC = () => {
         </div>
       )}
 
-      {/* Список игроков */}
       <div className="players-list">
         <h3>🎮 Players in Pool</h3>
         {currentRound?.players.map((player, index) => (
           <div key={index} className={`player-item ${winner?.userId === player.userId ? 'winner-player' : ''}`}>
             <div className="player-color" style={{ backgroundColor: player.color }} />
+            <img 
+              src={player.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`}
+              alt={player.firstName}
+              className="player-avatar-small"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=fallback${index}`;
+              }}
+            />
             <div className="player-info">
               <span className="player-name">
                 {player.firstName}
