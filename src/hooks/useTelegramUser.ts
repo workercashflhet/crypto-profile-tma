@@ -29,19 +29,15 @@ export const useTelegramUser = (): { user: TelegramUser | null; isLoading: boole
       
       if (launchParams.tgWebAppData?.user) {
         const tgUser = launchParams.tgWebAppData.user;
+        const userId = Number(tgUser.id);
         
-        // Формируем URL фото профиля
-        let photoUrl: string | undefined;
-        
-        if (tgUser.photoUrl) {
-          photoUrl = String(tgUser.photoUrl);
-        } else if (tgUser.id) {
-          // Используем стандартный URL фото Telegram
-          photoUrl = `https://t.me/i/userpic/320/${tgUser.id}.jpg`;
-        }
+        // Telegram фото профиля
+        const photoUrl = tgUser.photoUrl 
+          ? String(tgUser.photoUrl) 
+          : `https://t.me/i/userpic/320/${userId}.jpg`;
         
         const userData: TelegramUser = {
-          id: Number(tgUser.id),
+          id: userId,
           firstName: String(tgUser.firstName || 'User'),
           lastName: tgUser.lastName ? String(tgUser.lastName) : undefined,
           username: tgUser.username ? String(tgUser.username) : undefined,
@@ -51,7 +47,6 @@ export const useTelegramUser = (): { user: TelegramUser | null; isLoading: boole
         
         setUser(userData);
       } else {
-        console.warn('No Telegram user found. Using mock data.');
         setUser(MOCK_USER);
       }
     } catch (error) {

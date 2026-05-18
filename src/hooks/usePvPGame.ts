@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { PvPRound, PvPPlayer } from '../types/pvp';
+import { PvPRound, PvPPlayer, CurrencyType, PlayerBet } from '../types/pvp';
 import { useTelegramUser } from './useTelegramUser';
 import { useGameBalance } from './useGameBalance';
 
@@ -10,22 +10,34 @@ const PLAYER_COLORS: string[] = [
 ];
 
 const MOCK_PLAYERS: PvPPlayer[] = [
-  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: '#2196F3' },
-  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: '#E91E63' },
-  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: '#00BCD4' },
-  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: '#FF9800' },
-  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: '#4CAF50' },
+  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bets: [], totalBet: 0, currency: 'ton', color: '#2196F3' },
+  { userId: 1002, username: 'ton_master', firstName: 'Master', bets: [], totalBet: 0, currency: 'ton', color: '#E91E63' },
+  { userId: 1003, username: 'defi_king', firstName: 'King', bets: [], totalBet: 0, currency: 'ton', color: '#00BCD4' },
+  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bets: [], totalBet: 0, currency: 'ton', color: '#FF9800' },
+  { userId: 1005, username: 'hodler', firstName: 'Hodler', bets: [], totalBet: 0, currency: 'ton', color: '#4CAF50' },
 ];
 
 export const usePvPGame = () => {
   const { user } = useTelegramUser();
-  const { balance, withdrawTon, depositTon } = useGameBalance();
+  const { 
+    balance, 
+    withdrawTon, 
+    withdrawUsdt, 
+    depositTon, 
+    depositUsdt,
+    hasEnoughTon,
+    hasEnoughUsdt 
+  } = useGameBalance();
+  
   const [currentRound, setCurrentRound] = useState<PvPRound | null>(null);
   const [betAmount, setBetAmount] = useState<number>(10);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('ton');
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [winner, setWinner] = useState<PvPPlayer | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [playerBets, setPlayerBets] = useState<PlayerBet[]>([]);
+  
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -35,7 +47,8 @@ export const usePvPGame = () => {
     const newRound: PvPRound = {
       id: `round_${Date.now()}`,
       players: [],
-      totalPool: 0,
+      totalPoolTon: 0,
+      totalPoolUsdt: 0,
       timeLeft: ROUND_DURATION,
       status: 'waiting',
       timestamp: Date.now(),
@@ -46,6 +59,7 @@ export const usePvPGame = () => {
     setIsSpinning(false);
     setRotationAngle(0);
     setError(null);
+    setPlayerBets([]);
   }, [user]);
 
   const addBotPlayer = useCallback(() => {
@@ -60,8 +74,9 @@ export const usePvPGame = () => {
       
       if (availableBots.length === 0) return prev;
 
-      const randomBot = availableBots[Math.floor(Math.random() * availableBots.length)];
-      const randomBet = Math.floor(Math.random() * 50) + 5;
+      const randomBot = { ...availableBots[Math.floor(Math.random() * availableBots.length)] };
+      const randomBetAmount = Math.floor(Math.random() * 50) + 5;
+      const botCurrency: CurrencyType = Math.random() > 0.3 ? 'ton' : 'usdt';
       
       const playerColors = prev.players.map(p => p.color);
       const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
@@ -69,25 +84,42 @@ export const usePvPGame = () => {
         ? availableColors[Math.floor(Math.random() * availableColors.length)]
         : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
+      const botBets: PlayerBet[] = [{
+        amount: randomBetAmount,
+        currency: botCurrency,
+        timestamp: Date.now(),
+      }];
+
       const newBotPlayer: PvPPlayer = {
-        ...randomBot,
-        bet: randomBet,
-        color: botColor,
+        userId: randomBot.userId,
+        username: randomBot.username,
+        firstName: randomBot.firstName,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=bot${randomBot.userId}`,
+        bets: botBets,
+        totalBet: randomBetAmount,
+        currency: botCurrency,
+        color: botColor,
       };
 
       const updatedPlayers = [...prev.players, newBotPlayer];
-      const updatedPool = updatedPlayers.reduce((sum, p) => sum + p.bet, 0);
+      const totalTon = updatedPlayers.reduce((sum, p) => {
+        return sum + p.bets.filter(b => b.currency === 'ton').reduce((s, b) => s + b.amount, 0);
+      }, 0);
+      const totalUsdt = updatedPlayers.reduce((sum, p) => {
+        return sum + p.bets.filter(b => b.currency === 'usdt').reduce((s, b) => s + b.amount, 0);
+      }, 0);
 
       return {
         ...prev,
         players: updatedPlayers,
-        totalPool: updatedPool,
+        totalPoolTon: totalTon,
+        totalPoolUsdt: totalUsdt,
         status: prev.players.length === 0 ? 'active' : prev.status,
       };
     });
   }, []);
 
+  // Боты
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') {
       if (botsTimerRef.current) {
@@ -98,11 +130,8 @@ export const usePvPGame = () => {
     }
 
     botsTimerRef.current = setInterval(() => {
-      const randomDelay = Math.random() * 4000 + 3000;
-      setTimeout(() => {
-        addBotPlayer();
-      }, randomDelay);
-    }, 5000);
+      addBotPlayer();
+    }, 4000 + Math.random() * 3000);
 
     return () => {
       if (botsTimerRef.current) {
@@ -112,6 +141,7 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status, addBotPlayer]);
 
+  // Таймер
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') return;
 
@@ -140,64 +170,128 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status]);
 
-  const placeBet = useCallback((amount: number) => {
+  // Множественные ставки
+  const placeBet = useCallback((amount: number, currency: CurrencyType) => {
     if (!user || !currentRound) return;
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
     if (amount <= 0) return;
 
-    // Проверяем баланс
-    if (!withdrawTon(amount)) {
-      setError('Insufficient TON balance');
-      setTimeout(() => setError(null), 3000);
-      return;
+    // Проверяем баланс в зависимости от валюты
+    if (currency === 'ton') {
+      if (!hasEnoughTon(amount)) {
+        setError(`Insufficient TON balance. You have ${balance.ton.toFixed(1)} TON`);
+        setTimeout(() => setError(null), 3000);
+        return false;
+      }
+    } else {
+      if (!hasEnoughUsdt(amount)) {
+        setError(`Insufficient USDT balance. You have ${balance.usdt.toFixed(1)} USDT`);
+        setTimeout(() => setError(null), 3000);
+        return false;
+      }
     }
 
-    const existingPlayer = currentRound.players.find(p => p.userId === user.id);
-    if (existingPlayer) return;
+    // Списываем с баланса
+    if (currency === 'ton') {
+      withdrawTon(amount);
+    } else {
+      withdrawUsdt(amount);
+    }
 
-    const playerColors = currentRound.players.map(p => p.color);
-    const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
-    const assignedColor = availableColors.length > 0 
-      ? availableColors[Math.floor(Math.random() * availableColors.length)]
-      : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
-
-    const newPlayer: PvPPlayer = {
-      userId: user.id,
-      username: user.username || `user_${user.id}`,
-      firstName: user.firstName,
-      avatar: user.photoUrl || undefined,
-      bet: amount,
-      color: assignedColor,
+    const newBet: PlayerBet = {
+      amount,
+      currency,
+      timestamp: Date.now(),
     };
 
+    // Обновляем список ставок игрока
+    setPlayerBets(prev => [...prev, newBet]);
+
+    // Обновляем раунд
     setCurrentRound(prev => {
       if (!prev) return prev;
 
-      const updatedPlayers = [...prev.players, newPlayer];
-      const updatedPool = updatedPlayers.reduce((sum, p) => sum + p.bet, 0);
+      const existingPlayerIndex = prev.players.findIndex(p => p.userId === user.id);
+      let updatedPlayers: PvPPlayer[];
+
+      if (existingPlayerIndex >= 0) {
+        // Игрок уже есть - добавляем ставку
+        updatedPlayers = prev.players.map((p, i) => {
+          if (i === existingPlayerIndex) {
+            const updatedBets = [...p.bets, newBet];
+            const newTotal = updatedBets.reduce((sum, b) => sum + b.amount, 0);
+            return {
+              ...p,
+              bets: updatedBets,
+              totalBet: newTotal,
+              currency: currency, // Обновляем валюту последней ставки
+            };
+          }
+          return p;
+        });
+      } else {
+        // Новый игрок
+        const playerColors = prev.players.map(p => p.color);
+        const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
+        const assignedColor = availableColors.length > 0 
+          ? availableColors[Math.floor(Math.random() * availableColors.length)]
+          : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
+
+        const newPlayer: PvPPlayer = {
+          userId: user.id,
+          username: user.username || `user_${user.id}`,
+          firstName: user.firstName,
+          avatar: user.photoUrl || undefined,
+          bets: [newBet],
+          totalBet: amount,
+          currency: currency,
+          color: assignedColor,
+        };
+
+        updatedPlayers = [...prev.players, newPlayer];
+      }
+
+      const totalTon = updatedPlayers.reduce((sum, p) => {
+        return sum + p.bets.filter(b => b.currency === 'ton').reduce((s, b) => s + b.amount, 0);
+      }, 0);
+      const totalUsdt = updatedPlayers.reduce((sum, p) => {
+        return sum + p.bets.filter(b => b.currency === 'usdt').reduce((s, b) => s + b.amount, 0);
+      }, 0);
+
       const newStatus = prev.players.length === 0 ? 'active' : prev.status;
 
       return {
         ...prev,
         players: updatedPlayers,
-        totalPool: updatedPool,
+        totalPoolTon: totalTon,
+        totalPoolUsdt: totalUsdt,
         status: newStatus,
       };
     });
 
-    setTimeout(() => {
-      addBotPlayer();
-      setTimeout(() => addBotPlayer(), 1500);
-    }, 1000);
-  }, [user, currentRound, addBotPlayer, withdrawTon]);
+    // Добавляем ботов после первой ставки
+    if (currentRound.players.length === 0) {
+      setTimeout(() => {
+        addBotPlayer();
+        setTimeout(() => addBotPlayer(), 1500);
+      }, 1000);
+    }
 
+    return true;
+  }, [user, currentRound, addBotPlayer, withdrawTon, withdrawUsdt, hasEnoughTon, hasEnoughUsdt, balance]);
+
+  // Вычисление сегментов на основе общей суммы ставок
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
 
+    // Считаем общий пул (TON + USDT с курсом 1:1 для простоты)
+    const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolUsdt;
+    
     let currentAngle = 0;
     
     return currentRound.players.map((player) => {
-      const percentage = player.bet / currentRound.totalPool;
+      const playerValue = player.totalBet;
+      const percentage = playerValue / totalPoolValue;
       const sectorAngle = percentage * 360;
       const startAngle = currentAngle;
       const endAngle = currentAngle + sectorAngle;
@@ -214,6 +308,7 @@ export const usePvPGame = () => {
     });
   }, [currentRound]);
 
+  // Спин
   const spinWheel = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return;
     if (isSpinning) return;
@@ -247,14 +342,15 @@ export const usePvPGame = () => {
           prev ? { ...prev, status: 'finished', winner: winnerPlayer! } : prev
         );
         
-        // Начисляем выигрыш победителю (если это текущий пользователь)
+        // Начисляем выигрыш текущему пользователю
         if (winnerPlayer.userId === user?.id && currentRound) {
-          depositTon(currentRound.totalPool);
+          depositTon(currentRound.totalPoolTon);
+          depositUsdt(currentRound.totalPoolUsdt);
         }
       }
       setIsSpinning(false);
     }, 5000);
-  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon]);
+  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon, depositUsdt]);
 
   const resetRound = useCallback(() => {
     if (timerRef.current) {
@@ -276,18 +372,32 @@ export const usePvPGame = () => {
     };
   }, [initRound]);
 
+  const getTotalPool = () => {
+    if (!currentRound) return '0';
+    if (currentRound.totalPoolTon > 0 && currentRound.totalPoolUsdt > 0) {
+      return `${currentRound.totalPoolTon} TON + ${currentRound.totalPoolUsdt} USDT`;
+    }
+    if (currentRound.totalPoolTon > 0) return `${currentRound.totalPoolTon} TON`;
+    if (currentRound.totalPoolUsdt > 0) return `${currentRound.totalPoolUsdt} USDT`;
+    return '0';
+  };
+
   return {
     currentRound,
     betAmount,
     setBetAmount,
+    selectedCurrency,
+    setSelectedCurrency,
     isSpinning,
     rotationAngle,
     winner,
     error,
     balance,
+    playerBets,
     calculateSegments,
     placeBet,
     spinWheel,
     resetRound,
+    getTotalPool,
   };
 };

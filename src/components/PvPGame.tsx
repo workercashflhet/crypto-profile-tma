@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { usePvPGame } from '../hooks/usePvPGame';
+import { CurrencyType } from '../types/pvp';
 import LuckyWheel from './LuckyWheel';
 import './PvPGame.css';
 
@@ -8,18 +9,23 @@ const PvPGame: React.FC = () => {
     currentRound,
     betAmount,
     setBetAmount,
+    selectedCurrency,
+    setSelectedCurrency,
     isSpinning,
     rotationAngle,
     winner,
     error,
     balance,
+    playerBets,
     calculateSegments,
     placeBet,
     spinWheel,
     resetRound,
+    getTotalPool,
   } = usePvPGame();
 
   const segments = calculateSegments();
+  const myTotalBet = playerBets.reduce((sum, b) => sum + b.amount, 0);
 
   useEffect(() => {
     if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
@@ -32,34 +38,51 @@ const PvPGame: React.FC = () => {
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`;
   };
 
+  const handlePlaceBet = () => {
+    placeBet(betAmount, selectedCurrency);
+  };
+
+  const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.usdt;
+
   return (
     <div className="pvp-game">
       <div className="pvp-header">
         <h2 className="pvp-title">🎰 PvP Lucky Wheel</h2>
-        <p className="pvp-subtitle">Multiplayer • Bet against real players!</p>
+        <p className="pvp-subtitle">Multiplayer • Multiple bets allowed</p>
       </div>
 
-      {/* Баланс игрока */}
+      {/* Баланс */}
       <div className="player-balance-bar">
-        <div className="balance-item-small">
+        <div 
+          className={`balance-item-small ${selectedCurrency === 'ton' ? 'active-currency' : ''}`}
+          onClick={() => setSelectedCurrency('ton')}
+        >
           <img src="/ton.png" alt="TON" className="balance-icon-small" />
           <span className="balance-value-small">{balance.ton.toFixed(1)} TON</span>
         </div>
-        <div className="balance-item-small">
+        <div 
+          className={`balance-item-small ${selectedCurrency === 'usdt' ? 'active-currency' : ''}`}
+          onClick={() => setSelectedCurrency('usdt')}
+        >
           <img src="/ustd.png" alt="USDT" className="balance-icon-small" />
           <span className="balance-value-small">{balance.usdt.toFixed(1)} USDT</span>
         </div>
       </div>
 
-      {/* Ошибка */}
-      {error && (
-        <div className="error-message">{error}</div>
+      {/* Мои ставки */}
+      {myTotalBet > 0 && (
+        <div className="my-bets-bar">
+          <span>My bets: {myTotalBet} {selectedCurrency.toUpperCase()}</span>
+          <span className="bets-count">({playerBets.length} bet{playerBets.length > 1 ? 's' : ''})</span>
+        </div>
       )}
+
+      {error && <div className="error-message">{error}</div>}
 
       <div className="pvp-stats">
         <div className="stat-box">
           <div className="stat-label">Pool</div>
-          <div className="stat-value">{currentRound?.totalPool || 0} TON</div>
+          <div className="stat-value small">{getTotalPool()}</div>
         </div>
         <div className="stat-box">
           <div className="stat-label">Players</div>
@@ -80,6 +103,22 @@ const PvPGame: React.FC = () => {
 
       {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
         <div className="bet-section">
+          {/* Выбор валюты */}
+          <div className="currency-toggle">
+            <button
+              className={`currency-btn ${selectedCurrency === 'ton' ? 'active' : ''}`}
+              onClick={() => setSelectedCurrency('ton')}
+            >
+              💎 TON
+            </button>
+            <button
+              className={`currency-btn ${selectedCurrency === 'usdt' ? 'active' : ''}`}
+              onClick={() => setSelectedCurrency('usdt')}
+            >
+              💵 USDT
+            </button>
+          </div>
+
           <div className="bet-input-group">
             <button 
               className="bet-adjust" 
@@ -93,11 +132,11 @@ const PvPGame: React.FC = () => {
               value={betAmount}
               onChange={(e) => setBetAmount(Number(e.target.value))}
               min="1"
-              max={balance.ton}
+              max={maxBet}
             />
             <button 
               className="bet-adjust" 
-              onClick={() => setBetAmount(Math.min(balance.ton, betAmount + 5))}
+              onClick={() => setBetAmount(Math.min(maxBet, betAmount + 5))}
             >
               +
             </button>
@@ -105,13 +144,13 @@ const PvPGame: React.FC = () => {
 
           <button 
             className="place-bet-button"
-            onClick={() => placeBet(betAmount)}
-            disabled={betAmount > balance.ton}
+            onClick={handlePlaceBet}
+            disabled={betAmount > maxBet || betAmount <= 0}
           >
-            🎯 Place Bet ({betAmount} TON)
+            🎯 Place Bet ({betAmount} {selectedCurrency.toUpperCase()})
           </button>
           <p className="color-auto-text">
-            Balance: {balance.ton.toFixed(1)} TON • Color assigned automatically
+            You can place multiple bets • Color assigned automatically
           </p>
         </div>
       )}
@@ -137,7 +176,7 @@ const PvPGame: React.FC = () => {
             {winner.firstName} wins!
           </div>
           <div className="winner-prize">
-            {currentRound?.totalPool} TON
+            {getTotalPool()}
           </div>
           <button className="new-round-button" onClick={resetRound}>
             🔄 New Round
@@ -166,9 +205,9 @@ const PvPGame: React.FC = () => {
               <span className="player-username">@{player.username}</span>
             </div>
             <div className="player-stats">
-              <span className="player-bet">{player.bet} TON</span>
+              <span className="player-bet">{player.totalBet} {player.currency.toUpperCase()}</span>
               <span className="player-share">
-                {((player.bet / (currentRound?.totalPool || 1)) * 100).toFixed(1)}%
+                ({player.bets.length} bet{player.bets.length > 1 ? 's' : ''})
               </span>
             </div>
           </div>
