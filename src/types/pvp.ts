@@ -4,7 +4,7 @@ export interface PvPPlayer {
   firstName: string;
   avatar?: string;
   bet: number;
-  color: 'blue' | 'pink' | 'cyan';
+  color: string; // Теперь любая строка, не только blue/pink/cyan
 }
 
 export interface PvPRound {

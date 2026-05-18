@@ -8,13 +8,13 @@ const PLAYER_COLORS: string[] = [
   '#9C27B0', '#FF5722', '#795548', '#607D8B', '#CDDC39',
 ];
 
-// Мок-игроки с аватарками
+// Мок-игроки
 const MOCK_PLAYERS: PvPPlayer[] = [
-  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale' },
-  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=master' },
-  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=king' },
-  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=pro' },
-  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: '', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hodler' },
+  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: '#2196F3', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale' },
+  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: '#E91E63', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=master' },
+  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: '#00BCD4', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=king' },
+  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: '#FF9800', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=pro' },
+  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: '#4CAF50', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hodler' },
 ];
 
 export const usePvPGame = () => {
@@ -24,21 +24,8 @@ export const usePvPGame = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [winner, setWinner] = useState<PvPPlayer | null>(null);
-  const [usedColors, setUsedColors] = useState<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Получение случайного неиспользованного цвета
-  const getRandomColor = useCallback(() => {
-    const availableColors = PLAYER_COLORS.filter(c => !usedColors.includes(c));
-    if (availableColors.length === 0) {
-      // Если все цвета использованы, сбрасываем и берем случайный
-      setUsedColors([]);
-      return PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
-    }
-    const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-    return color;
-  }, [usedColors]);
 
   // Инициализация нового раунда
   const initRound = useCallback(() => {
@@ -57,7 +44,6 @@ export const usePvPGame = () => {
     setWinner(null);
     setIsSpinning(false);
     setRotationAngle(0);
-    setUsedColors([]);
   }, [user]);
 
   // Добавление ботов-игроков
@@ -76,7 +62,7 @@ export const usePvPGame = () => {
       const randomBot = availableBots[Math.floor(Math.random() * availableBots.length)];
       const randomBet = Math.floor(Math.random() * 50) + 5;
       
-      // Назначаем цвет боту
+      // Назначаем новый цвет боту
       const playerColors = prev.players.map(p => p.color);
       const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
       const botColor = availableColors.length > 0 
@@ -156,7 +142,7 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status]);
 
-  // Добавление игрока в пул (теперь без выбора цвета)
+  // Добавление игрока в пул
   const placeBet = useCallback((amount: number) => {
     if (!user || !currentRound) return;
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
@@ -196,7 +182,7 @@ export const usePvPGame = () => {
       };
     });
 
-    // Добавляем ботов после ставки игрока
+    // Добавляем ботов
     setTimeout(() => {
       addBotPlayer();
       setTimeout(() => addBotPlayer(), 1500);
