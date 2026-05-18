@@ -26,7 +26,7 @@ const WalletConnect: React.FC = () => {
     );
   }
 
-  // Конвертируем адрес в user-friendly формат
+  // Конвертируем в non-bounceable формат (UQ...)
   const rawAddress = wallet.account.address;
   const friendlyAddress = formatAddress(rawAddress);
   
