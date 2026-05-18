@@ -65,6 +65,7 @@ export const usePvPGame = () => {
         ? availableColors[Math.floor(Math.random() * availableColors.length)]
         : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
+      // У ботов нет реального фото, используем мок
       const newBotPlayer: PvPPlayer = {
         ...randomBot,
         bet: randomBet,
@@ -151,12 +152,13 @@ export const usePvPGame = () => {
       ? availableColors[Math.floor(Math.random() * availableColors.length)]
       : PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
 
+    // ИСПОЛЬЗУЕМ РЕАЛЬНОЕ ФОТО ИЗ TELEGRAM
+    // Если photoUrl есть - используем его, иначе undefined (будет fallback)
     const newPlayer: PvPPlayer = {
       userId: user.id,
       username: user.username || `user_${user.id}`,
       firstName: user.firstName,
-      // ПРИОРИТЕТ: фото из Telegram, иначе мок
-      avatar: user.photoUrl || undefined,
+      avatar: user.photoUrl || undefined, // Реальное фото или undefined для fallback
       bet: amount,
       color: assignedColor,
     };
@@ -182,7 +184,6 @@ export const usePvPGame = () => {
     }, 1000);
   }, [user, currentRound, addBotPlayer]);
 
-  // ВЫЧИСЛЕНИЕ СЕГМЕНТОВ - точное, без наложений
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
 
@@ -206,7 +207,6 @@ export const usePvPGame = () => {
     });
   }, [currentRound]);
 
-  // СПИН КОЛЕСА - победитель определяется правильно
   const spinWheel = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return;
     if (isSpinning) return;
@@ -214,21 +214,12 @@ export const usePvPGame = () => {
     setIsSpinning(true);
     setCurrentRound(prev => prev ? { ...prev, status: 'spinning' } : prev);
 
-    // Вычисляем сегменты ДО спина
     const segments = calculateSegments();
     
-    // Случайный угол, на котором остановится стрелка (0-360)
-    // Стрелка находится вверху (0 градусов), колесо вращается
     const stopAngle = Math.random() * 360;
-    
-    // Вращение колеса: 8 полных оборотов + угол остановки
-    // Так как стрелка вверху, а колесо вращается по часовой,
-    // нам нужно довернуть до нужного угла
     const totalRotation = 360 * 8 + (360 - stopAngle);
     setRotationAngle(totalRotation);
 
-    // Определяем победителя СРАЗУ
-    // Стрелка фиксирована вверху (0 градусов после нормализации)
     let winnerPlayer: PvPPlayer | null = null;
     
     for (const segment of segments) {
@@ -238,12 +229,10 @@ export const usePvPGame = () => {
       }
     }
 
-    // Если не нашли (крайний случай), берем первого
     if (!winnerPlayer && segments.length > 0) {
       winnerPlayer = segments[0].player;
     }
 
-    // Устанавливаем победителя после анимации
     setTimeout(() => {
       if (winnerPlayer) {
         setWinner(winnerPlayer);

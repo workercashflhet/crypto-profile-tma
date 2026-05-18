@@ -11,11 +11,11 @@ const manifestUrl = 'https://raw.githubusercontent.com/workercashflhet/crypto-pr
 type Tab = 'pvp' | 'profile';
 
 const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
+  // PvP - первая вкладка по умолчанию
+  const [activeTab, setActiveTab] = useState<Tab>('pvp');
 
   return (
     <div className="app">
-      {/* Контент */}
       <div className="app-content">
         {activeTab === 'profile' ? (
           <>
@@ -29,7 +29,6 @@ const AppContent: React.FC = () => {
         )}
       </div>
 
-      {/* Нижняя навигация */}
       <nav className="bottom-nav">
         <button
           className={`nav-item ${activeTab === 'pvp' ? 'active' : ''}`}

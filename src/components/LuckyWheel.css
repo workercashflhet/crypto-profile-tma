@@ -16,29 +16,20 @@
   height: 100%;
   border-radius: 50%;
   position: relative;
-  border: 4px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3);
+  /* БЕЗ ОБОДКА */
+  border: none;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
 }
 
 .wheel-empty {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.08);
 }
 
-.wheel-empty-text {
-  color: var(--tg-theme-hint-color, #8e8e93);
-  font-size: 16px;
-  text-align: center;
-  padding: 20px;
-}
-
-/* Центр колеса с таймером - НЕПРОЗРАЧНЫЙ */
+/* Центр колеса с таймером */
 .wheel-center-solid {
   position: absolute;
   top: 50%;
@@ -69,6 +60,20 @@
   z-index: 1;
 }
 
+.timer-text-waiting {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.4;
+  z-index: 1;
+  width: 70px;
+}
+
 .time-warning {
   color: #ff453a;
   animation: timePulse 0.5s infinite;
@@ -76,16 +81,16 @@
 
 .wheel-pointer {
   position: absolute;
-  top: -18px;
+  top: -20px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 32px;
+  font-size: 34px;
   color: #FFD700;
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
   z-index: 10;
 }
 
-/* Аватарки на колесе - ближе к краю */
+/* Аватарки СТРОГО ПО ЦЕНТРУ ОБЛАСТИ ИГРОКА */
 .wheel-avatar-container {
   position: absolute;
   top: 50%;
@@ -93,28 +98,24 @@
   width: 0;
   height: 0;
   transform-origin: 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 2;
 }
 
-.avatar-wrapper {
+.avatar-position {
   position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translate(-50%, -50%);
+  /* Центр радиуса колеса = 160px, размещаем на 60% радиуса */
+  transform: translate(-50%, -50%) translateY(-96px);
 }
 
 .wheel-player-avatar {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
   background: #2c2c2e;
+  display: block;
 }
 
 /* Спиннинг */
@@ -124,10 +125,10 @@
 
 @keyframes wheelGlow {
   from { 
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3); 
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
   }
   to { 
-    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4), inset 0 0 30px rgba(255, 215, 0, 0.15); 
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.5);
   }
 }
 
