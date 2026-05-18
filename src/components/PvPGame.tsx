@@ -25,6 +25,15 @@ const PvPGame: React.FC = () => {
     }
   }, [currentRound?.status]);
 
+  // Функция для получения аватарки игрока
+  const getPlayerAvatar = (player: { avatar?: string; userId: number; firstName: string }) => {
+    if (player.avatar) {
+      return player.avatar; // Реальное фото из Telegram
+    }
+    // Мок-аватарка только если нет фото
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`;
+  };
+
   return (
     <div className="pvp-game">
       <div className="pvp-header">
@@ -54,7 +63,6 @@ const PvPGame: React.FC = () => {
         timeLeft={currentRound?.timeLeft || 0}
       />
 
-      {/* Ставка - без выбора цвета */}
       {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
         <div className="bet-section">
           <div className="bet-input-group">
@@ -97,6 +105,14 @@ const PvPGame: React.FC = () => {
 
       {winner && (
         <div className="winner-section">
+          <img 
+            src={getPlayerAvatar(winner)}
+            alt={winner.firstName}
+            className="winner-avatar"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${winner.userId}`;
+            }}
+          />
           <div className="winner-crown">👑</div>
           <div className="winner-announcement">
             {winner.firstName} wins!
@@ -116,11 +132,11 @@ const PvPGame: React.FC = () => {
           <div key={index} className={`player-item ${winner?.userId === player.userId ? 'winner-player' : ''}`}>
             <div className="player-color" style={{ backgroundColor: player.color }} />
             <img 
-              src={player.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`}
+              src={getPlayerAvatar(player)}
               alt={player.firstName}
               className="player-avatar-small"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=fallback${index}`;
+                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`;
               }}
             />
             <div className="player-info">

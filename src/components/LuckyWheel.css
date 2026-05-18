@@ -7,8 +7,8 @@
 
 .wheel-container {
   position: relative;
-  width: 300px;
-  height: 300px;
+  width: 320px;
+  height: 320px;
 }
 
 .wheel {
@@ -38,25 +38,8 @@
   padding: 20px;
 }
 
-/* Центр колеса с таймером */
-.wheel-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.wheel-timer {
+/* Центр колеса с таймером - НЕПРОЗРАЧНЫЙ */
+.wheel-center-solid {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -66,21 +49,12 @@
   z-index: 5;
 }
 
-.timer-circle {
+.timer-circle-svg {
   width: 100%;
   height: 100%;
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.timer-bg {
-  opacity: 0.2;
-}
-
-.timer-progress {
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
-  transition: stroke-dasharray 1s linear;
 }
 
 .timer-text {
@@ -102,58 +76,22 @@
 
 .wheel-pointer {
   position: absolute;
-  top: -15px;
+  top: -18px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 30px;
+  font-size: 32px;
   color: #FFD700;
-  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5));
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.6));
   z-index: 10;
 }
 
-.wheel-segment-label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform-origin: 0 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  color: white;
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.segment-player-name {
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.segment-bet {
-  font-size: 10px;
-  opacity: 0.8;
-}
-
-.spinning {
-  animation: wheelGlow 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes wheelGlow {
-  from { box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3); }
-  to { box-shadow: 0 0 40px rgba(255, 215, 0, 0.3), inset 0 0 30px rgba(255, 215, 0, 0.1); }
-}
-
-@keyframes timePulse {
-  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
-}
-
-/* Аватарки на колесе */
+/* Аватарки на колесе - ближе к краю */
 .wheel-avatar-container {
   position: absolute;
   top: 50%;
   left: 50%;
+  width: 0;
+  height: 0;
   transform-origin: 0 0;
   display: flex;
   align-items: center;
@@ -161,12 +99,39 @@
   z-index: 2;
 }
 
+.avatar-wrapper {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+}
+
 .wheel-player-avatar {
   width: 16px;
   height: 16px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  background: #2c2c2e;
+}
+
+/* Спиннинг */
+.spinning {
+  animation: wheelGlow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes wheelGlow {
+  from { 
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3); 
+  }
+  to { 
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4), inset 0 0 30px rgba(255, 215, 0, 0.15); 
+  }
+}
+
+@keyframes timePulse {
+  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
 }

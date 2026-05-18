@@ -8,13 +8,12 @@ const PLAYER_COLORS: string[] = [
   '#9C27B0', '#FF5722', '#795548', '#607D8B', '#CDDC39',
 ];
 
-// Мок-игроки
 const MOCK_PLAYERS: PvPPlayer[] = [
-  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: '#2196F3', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=whale' },
-  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: '#E91E63', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=master' },
-  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: '#00BCD4', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=king' },
-  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: '#FF9800', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=pro' },
-  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: '#4CAF50', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hodler' },
+  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: '#2196F3' },
+  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: '#E91E63' },
+  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: '#00BCD4' },
+  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: '#FF9800' },
+  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: '#4CAF50' },
 ];
 
 export const usePvPGame = () => {
@@ -27,7 +26,6 @@ export const usePvPGame = () => {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Инициализация нового раунда
   const initRound = useCallback(() => {
     if (!user) return;
 
@@ -46,7 +44,6 @@ export const usePvPGame = () => {
     setRotationAngle(0);
   }, [user]);
 
-  // Добавление ботов-игроков
   const addBotPlayer = useCallback(() => {
     setCurrentRound(prev => {
       if (!prev) return prev;
@@ -62,7 +59,6 @@ export const usePvPGame = () => {
       const randomBot = availableBots[Math.floor(Math.random() * availableBots.length)];
       const randomBet = Math.floor(Math.random() * 50) + 5;
       
-      // Назначаем новый цвет боту
       const playerColors = prev.players.map(p => p.color);
       const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
       const botColor = availableColors.length > 0 
@@ -73,6 +69,7 @@ export const usePvPGame = () => {
         ...randomBot,
         bet: randomBet,
         color: botColor,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=bot${randomBot.userId}`,
       };
 
       const updatedPlayers = [...prev.players, newBotPlayer];
@@ -88,7 +85,6 @@ export const usePvPGame = () => {
     });
   }, []);
 
-  // Запуск ботов
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') {
       if (botsTimerRef.current) {
@@ -113,7 +109,6 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status, addBotPlayer]);
 
-  // Таймер обратного отсчета
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') return;
 
@@ -142,7 +137,6 @@ export const usePvPGame = () => {
     };
   }, [currentRound?.status]);
 
-  // Добавление игрока в пул
   const placeBet = useCallback((amount: number) => {
     if (!user || !currentRound) return;
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
@@ -151,7 +145,6 @@ export const usePvPGame = () => {
     const existingPlayer = currentRound.players.find(p => p.userId === user.id);
     if (existingPlayer) return;
 
-    // Автоматически назначаем цвет
     const playerColors = currentRound.players.map(p => p.color);
     const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
     const assignedColor = availableColors.length > 0 
@@ -162,7 +155,8 @@ export const usePvPGame = () => {
       userId: user.id,
       username: user.username || `user_${user.id}`,
       firstName: user.firstName,
-      avatar: user.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+      // ПРИОРИТЕТ: фото из Telegram, иначе мок
+      avatar: user.photoUrl || undefined,
       bet: amount,
       color: assignedColor,
     };
@@ -182,28 +176,29 @@ export const usePvPGame = () => {
       };
     });
 
-    // Добавляем ботов
     setTimeout(() => {
       addBotPlayer();
       setTimeout(() => addBotPlayer(), 1500);
     }, 1000);
   }, [user, currentRound, addBotPlayer]);
 
-  // Вычисление углов секторов
+  // ВЫЧИСЛЕНИЕ СЕГМЕНТОВ - точное, без наложений
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
 
-    return currentRound.players.map((player, index) => {
-      const percentage = (player.bet / currentRound.totalPool) * 100;
-      const startAngle = index === 0 ? 0 : 
-        currentRound.players.slice(0, index).reduce((sum, p) => 
-          sum + (p.bet / currentRound.totalPool) * 360, 0
-        );
-      const endAngle = startAngle + (percentage * 360) / 100;
+    let currentAngle = 0;
+    
+    return currentRound.players.map((player) => {
+      const percentage = player.bet / currentRound.totalPool;
+      const sectorAngle = percentage * 360;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + sectorAngle;
+      
+      currentAngle = endAngle;
 
       return {
         color: player.color,
-        percentage,
+        percentage: percentage * 100,
         player,
         startAngle,
         endAngle,
@@ -211,7 +206,7 @@ export const usePvPGame = () => {
     });
   }, [currentRound]);
 
-  // Спин колеса
+  // СПИН КОЛЕСА - победитель определяется правильно
   const spinWheel = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return;
     if (isSpinning) return;
@@ -219,39 +214,47 @@ export const usePvPGame = () => {
     setIsSpinning(true);
     setCurrentRound(prev => prev ? { ...prev, status: 'spinning' } : prev);
 
-    const randomAngle = Math.random() * 360;
-    const totalRotation = 3600 + randomAngle;
+    // Вычисляем сегменты ДО спина
+    const segments = calculateSegments();
+    
+    // Случайный угол, на котором остановится стрелка (0-360)
+    // Стрелка находится вверху (0 градусов), колесо вращается
+    const stopAngle = Math.random() * 360;
+    
+    // Вращение колеса: 8 полных оборотов + угол остановки
+    // Так как стрелка вверху, а колесо вращается по часовой,
+    // нам нужно довернуть до нужного угла
+    const totalRotation = 360 * 8 + (360 - stopAngle);
     setRotationAngle(totalRotation);
 
+    // Определяем победителя СРАЗУ
+    // Стрелка фиксирована вверху (0 градусов после нормализации)
+    let winnerPlayer: PvPPlayer | null = null;
+    
+    for (const segment of segments) {
+      if (stopAngle >= segment.startAngle && stopAngle < segment.endAngle) {
+        winnerPlayer = segment.player;
+        break;
+      }
+    }
+
+    // Если не нашли (крайний случай), берем первого
+    if (!winnerPlayer && segments.length > 0) {
+      winnerPlayer = segments[0].player;
+    }
+
+    // Устанавливаем победителя после анимации
     setTimeout(() => {
-      const segments = calculateSegments();
-      const normalizedAngle = randomAngle;
-      
-      let winnerPlayer: PvPPlayer | undefined;
-      
-      for (const segment of segments) {
-        if (normalizedAngle >= segment.startAngle && normalizedAngle < segment.endAngle) {
-          winnerPlayer = segment.player;
-          break;
-        }
-      }
-
-      if (!winnerPlayer && segments.length > 0) {
-        winnerPlayer = segments[0].player;
-      }
-
       if (winnerPlayer) {
         setWinner(winnerPlayer);
         setCurrentRound(prev => 
-          prev ? { ...prev, status: 'finished', winner: winnerPlayer } : prev
+          prev ? { ...prev, status: 'finished', winner: winnerPlayer! } : prev
         );
       }
-
       setIsSpinning(false);
     }, 5000);
   }, [currentRound, isSpinning, calculateSegments]);
 
-  // Сброс раунда
   const resetRound = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -264,7 +267,6 @@ export const usePvPGame = () => {
     initRound();
   }, [initRound]);
 
-  // Инициализация
   useEffect(() => {
     initRound();
     return () => {

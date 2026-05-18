@@ -311,3 +311,12 @@
   object-fit: cover;
   flex-shrink: 0;
 }
+
+.winner-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFD700;
+  margin-bottom: 8px;
+}

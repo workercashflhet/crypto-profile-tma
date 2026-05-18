@@ -18,9 +18,10 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
             <div className="wheel-empty-text">Waiting for players...</div>
           </div>
           <div className="wheel-pointer">▼</div>
-          <div className="wheel-center">
-            <svg className="timer-circle" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+          {/* Таймер на пустом колесе */}
+          <div className="wheel-center-solid">
+            <svg className="timer-circle-svg" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="#1a1a2e" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
               <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="3"
                 strokeDasharray={`${(timeLeft / 30) * 264} 264`}
                 strokeLinecap="round" transform="rotate(-90 50 50)"
@@ -34,12 +35,25 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
   }
 
   const createGradient = () => {
-    const gradients = segments.map((segment) => {
+    // Сортируем сегменты по startAngle для правильного порядка
+    const sortedSegments = [...segments].sort((a, b) => a.startAngle - b.startAngle);
+    
+    const gradients = sortedSegments.map((segment, index) => {
       const startPercent = (segment.startAngle / 360) * 100;
       const endPercent = (segment.endAngle / 360) * 100;
+      
+      // Обеспечиваем точные границы без наложений
+      if (index === 0 && startPercent > 0) {
+        return `${segment.color} 0% ${endPercent}%`;
+      }
+      if (index === sortedSegments.length - 1 && endPercent < 100) {
+        return `${segment.color} ${startPercent}% 100%`;
+      }
+      
       return `${segment.color} ${startPercent}% ${endPercent}%`;
     });
-    return `conic-gradient(${gradients.join(', ')})`;
+
+    return `conic-gradient(from 0deg, ${gradients.join(', ')})`;
   };
 
   return (
@@ -53,35 +67,39 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
             transition: isSpinning ? 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
           }}
         >
-          {/* Аватарки игроков на колесе */}
+          {/* Аватарки игроков - ближе к краю */}
           {segments.map((segment, index) => {
-            const midAngle = (segment.startAngle + segment.endAngle) / 2;
+            // Центр сектора в градусах
+            const midAngle = segment.startAngle + (segment.endAngle - segment.startAngle) / 2;
             
             return (
               <div
                 key={index}
                 className="wheel-avatar-container"
                 style={{
-                  transform: `rotate(${midAngle}deg) translateY(-35%)`,
+                  transform: `rotate(${midAngle}deg) translateY(-80px)`,
                 }}
               >
-                <img
-                  src={segment.player.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${segment.player.userId}`}
-                  alt={segment.player.firstName}
-                  className="wheel-player-avatar"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=fallback${index}`;
-                  }}
-                />
+                <div className="avatar-wrapper">
+                  <img
+                    src={segment.player.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=player${segment.player.userId}`}
+                    alt={segment.player.firstName}
+                    className="wheel-player-avatar"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=fallback${index}`;
+                    }}
+                  />
+                </div>
               </div>
             );
           })}
         </div>
         
-        {/* Таймер в центре */}
-        <div className="wheel-center">
-          <svg className="timer-circle" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+        {/* Таймер в центре - НЕ прозрачный */}
+        <div className="wheel-center-solid">
+          <svg className="timer-circle-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="#1a1a2e" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
             <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="3"
               strokeDasharray={`${(timeLeft / 30) * 264} 264`}
               strokeLinecap="round" transform="rotate(-90 50 50)"
