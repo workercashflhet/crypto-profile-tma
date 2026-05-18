@@ -44,7 +44,6 @@ const PvPGame: React.FC = () => {
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.usdt;
 
-  // Форматирование ставок игрока для отображения
   const formatPlayerBets = (player: { bets: { amount: number; currency: CurrencyType }[] }): string => {
     const tonBets = player.bets.filter(b => b.currency === 'ton');
     const usdtBets = player.bets.filter(b => b.currency === 'usdt');
@@ -59,7 +58,6 @@ const PvPGame: React.FC = () => {
     return parts.join(' + ');
   };
 
-  // Расчет шанса выигрыша игрока
   const calculateWinChance = (player: { totalBet: number; bets: { amount: number; currency: CurrencyType }[] }): string => {
     if (!currentRound) return '0';
     
@@ -76,7 +74,6 @@ const PvPGame: React.FC = () => {
         <p className="pvp-subtitle">Multiplayer • Multiple bets allowed</p>
       </div>
 
-      {/* Баланс */}
       <div className="player-balance-bar">
         <div 
           className={`balance-item-small ${selectedCurrency === 'ton' ? 'active-currency' : ''}`}
@@ -94,18 +91,15 @@ const PvPGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Мои ставки */}
       {playerBets.length > 0 && (
         <div className="my-bets-bar">
           <span>My bets: {formatPlayerBets({ bets: playerBets })}</span>
-          {currentRound && (
-            <span className="bets-count">
-              Win chance: {calculateWinChance({ 
-                totalBet: myTotalBet, 
-                bets: playerBets 
-              })}%
-            </span>
-          )}
+          <span className="bets-count">
+            {calculateWinChance({ 
+              totalBet: myTotalBet, 
+              bets: playerBets 
+            })}%
+          </span>
         </div>
       )}
 
@@ -114,7 +108,7 @@ const PvPGame: React.FC = () => {
       <div className="pvp-stats">
         <div className="stat-box">
           <div className="stat-label">Pool</div>
-          <div className="stat-value small">{getTotalPool()}</div>
+          <div className="stat-value">{getTotalPool()}</div>
         </div>
         <div className="stat-box">
           <div className="stat-label">Players</div>
@@ -238,7 +232,7 @@ const PvPGame: React.FC = () => {
             <div className="player-stats">
               <span className="player-bet">{formatPlayerBets(player)}</span>
               <span className="player-share">
-                {calculateWinChance(player)}% win chance
+                {calculateWinChance(player)}%
               </span>
             </div>
           </div>

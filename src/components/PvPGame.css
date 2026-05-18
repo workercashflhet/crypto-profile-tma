@@ -21,6 +21,66 @@
   margin: 0;
 }
 
+/* Баланс */
+.player-balance-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.balance-item-small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.active-currency {
+  border: 2px solid var(--tg-theme-button-color, #2ea6ff) !important;
+}
+
+.balance-icon-small {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.balance-value-small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+/* Мои ставки */
+.my-bets-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(46, 166, 255, 0.12);
+  border: 1px solid rgba(46, 166, 255, 0.2);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.bets-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tg-theme-button-color, #2ea6ff);
+}
+
+/* Статистика - ЕДИНЫЙ РАЗМЕР ШРИФТА */
 .pvp-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -43,21 +103,31 @@
 }
 
 .stat-value {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--tg-theme-text-color, #ffffff);
+  word-break: break-word;
 }
 
-.time-warning {
+/* Ошибка */
+.error-message {
+  background: rgba(255, 69, 58, 0.15);
   color: #ff453a;
-  animation: timePulse 1s infinite;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  animation: fadeIn 0.3s ease;
 }
 
-@keyframes timePulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
+/* Секция ставок */
 .bet-section {
   background: var(--tg-theme-secondary-bg-color, #1c1c1e);
   border-radius: 16px;
@@ -65,26 +135,28 @@
   margin-bottom: 20px;
 }
 
-.color-selector {
+.currency-toggle {
   display: flex;
   gap: 12px;
-  justify-content: center;
   margin-bottom: 16px;
 }
 
-.color-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 3px solid transparent;
+.currency-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: var(--tg-theme-bg-color, #2c2c2e);
+  color: var(--tg-theme-text-color, #ffffff);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.color-button.selected {
-  border-color: white;
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+.currency-btn.active {
+  border-color: var(--tg-theme-button-color, #2ea6ff);
+  background: rgba(46, 166, 255, 0.15);
 }
 
 .bet-input-group {
@@ -144,90 +216,14 @@
   opacity: 0.9;
 }
 
-.winner-section {
+.color-auto-text {
   text-align: center;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
-  border-radius: 16px;
-  margin-bottom: 20px;
-}
-
-.winner-announcement {
-  font-size: 20px;
-  font-weight: 700;
-  color: #FFD700;
-  margin-bottom: 16px;
-}
-
-.new-round-button {
-  padding: 12px 24px;
-  background: var(--tg-theme-button-color, #2ea6ff);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.players-list {
-  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
-  border-radius: 16px;
-  padding: 20px;
-}
-
-.players-list h3 {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #ffffff);
-  margin-bottom: 12px;
-}
-
-.player-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  background: var(--tg-theme-bg-color, #2c2c2e);
-  border-radius: 10px;
-  margin-bottom: 8px;
-}
-
-.player-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.player-name {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #ffffff);
-}
-
-.player-bet {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #ffffff);
-}
-
-.player-share {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--tg-theme-hint-color, #8e8e93);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 2px 8px;
-  border-radius: 10px;
+  margin-top: 8px;
 }
 
-.no-players {
-  text-align: center;
-  color: var(--tg-theme-hint-color, #8e8e93);
-  padding: 20px;
-  font-size: 14px;
-}
-
+/* Спиннинг */
 .spinning-status {
   text-align: center;
   padding: 16px;
@@ -248,16 +244,77 @@
   50% { opacity: 0.6; }
 }
 
+/* Победитель */
+.winner-section {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.winner-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFD700;
+  margin-bottom: 8px;
+}
+
 .winner-crown {
   font-size: 40px;
   margin-bottom: 8px;
 }
 
+.winner-announcement {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 8px;
+}
+
 .winner-prize {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 700;
   color: #FFD700;
   margin-bottom: 16px;
+}
+
+.new-round-button {
+  padding: 12px 24px;
+  background: var(--tg-theme-button-color, #2ea6ff);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Список игроков */
+.players-list {
+  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.players-list h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #ffffff);
+  margin-bottom: 12px;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--tg-theme-bg-color, #2c2c2e);
+  border-radius: 10px;
+  margin-bottom: 8px;
 }
 
 .winner-player {
@@ -265,10 +322,32 @@
   border: 1px solid rgba(255, 215, 0, 0.3) !important;
 }
 
+.player-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.player-avatar-small {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .player-info {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+}
+
+.player-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color, #ffffff);
 }
 
 .player-username {
@@ -280,6 +359,19 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.player-bet {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+.player-share {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tg-theme-button-color, #2ea6ff);
 }
 
 .no-players {
@@ -297,156 +389,18 @@
   opacity: 0.7;
 }
 
-.color-auto-text {
-  text-align: center;
-  font-size: 11px;
-  color: var(--tg-theme-hint-color, #8e8e93);
-  margin-top: 8px;
-}
-
-.player-avatar-small {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.winner-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #FFD700;
-  margin-bottom: 8px;
-}
-
-.player-balance-bar {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 16px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-}
-
-.balance-item-small {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--tg-theme-secondary-bg-color, #1c1c1e);
-  padding: 6px 12px;
-  border-radius: 8px;
-}
-
-.balance-icon-small {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-}
-
-.balance-value-small {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #ffffff);
-}
-
-.error-message {
-  background: rgba(255, 69, 58, 0.15);
+.time-warning {
   color: #ff453a;
-  padding: 10px 16px;
-  border-radius: 10px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 12px;
-  animation: fadeIn 0.3s ease;
+  animation: timePulse 1s infinite;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes timePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
-.active-currency {
-  border: 2px solid var(--tg-theme-button-color, #2ea6ff) !important;
-}
-
-.my-bets-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 16px;
-  background: rgba(46, 166, 255, 0.15);
-  border-radius: 10px;
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #ffffff);
-}
-
-.bets-count {
-  font-size: 12px;
-  color: var(--tg-theme-hint-color, #8e8e93);
-}
-
-.currency-toggle {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.currency-btn {
-  flex: 1;
-  padding: 10px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: var(--tg-theme-bg-color, #2c2c2e);
-  color: var(--tg-theme-text-color, #ffffff);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.currency-btn.active {
-  border-color: var(--tg-theme-button-color, #2ea6ff);
-  background: rgba(46, 166, 255, 0.15);
-}
-
-.stat-value.small {
-  font-size: 12px;
-}
-
-.my-bets-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 16px;
-  background: rgba(46, 166, 255, 0.12);
-  border: 1px solid rgba(46, 166, 255, 0.2);
-  border-radius: 10px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--tg-theme-text-color, #ffffff);
-}
-
-.bets-count {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--tg-theme-button-color, #2ea6ff);
-}
-
-.player-bet {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--tg-theme-text-color, #ffffff);
-}
-
-.player-share {
-  font-size: 11px;
-  color: var(--tg-theme-hint-color, #8e8e93);
-  text-align: right;
+@media (max-width: 400px) {
+  .stat-value {
+    font-size: 14px;
+  }
 }
