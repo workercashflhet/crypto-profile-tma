@@ -27,43 +27,41 @@ const PvPGame: React.FC = () => {
     if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
       spinWheel();
     }
-  }, [currentRound?.status, isSpinning, spinWheel, currentRound?.players.length]);
+  }, [currentRound?.status]);
 
   return (
     <div className="pvp-game">
-      {/* Заголовок */}
       <div className="pvp-header">
         <h2 className="pvp-title">🎰 PvP Lucky Wheel</h2>
-        <p className="pvp-subtitle">Bet against other players!</p>
+        <p className="pvp-subtitle">Multiplayer • Bet against real players!</p>
       </div>
 
-      {/* Таймер и пул */}
+      {/* Статистика */}
       <div className="pvp-stats">
         <div className="stat-box">
-          <div className="stat-label">Time Left</div>
-          <div className={`stat-value ${currentRound?.timeLeft && currentRound.timeLeft <= 10 ? 'time-warning' : ''}`}>
-            {currentRound?.timeLeft || 0}s
-          </div>
-        </div>
-        <div className="stat-box">
-          <div className="stat-label">Total Pool</div>
+          <div className="stat-label">Pool</div>
           <div className="stat-value">{currentRound?.totalPool || 0} TON</div>
         </div>
         <div className="stat-box">
           <div className="stat-label">Players</div>
           <div className="stat-value">{currentRound?.players.length || 0}</div>
         </div>
+        <div className="stat-box">
+          <div className="stat-label">Round</div>
+          <div className="stat-value">#{currentRound?.id.slice(-4) || '----'}</div>
+        </div>
       </div>
 
-      {/* Колесо */}
+      {/* Колесо с таймером в центре */}
       <LuckyWheel 
         segments={segments} 
         rotationAngle={rotationAngle} 
-        isSpinning={isSpinning} 
+        isSpinning={isSpinning}
+        timeLeft={currentRound?.timeLeft || 0}
       />
 
       {/* Ставка */}
-      {currentRound?.status !== 'finished' && (
+      {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
         <div className="bet-section">
           <div className="color-selector">
             {COLORS.map((color) => (
@@ -101,40 +99,61 @@ const PvPGame: React.FC = () => {
           <button 
             className="place-bet-button"
             onClick={() => placeBet(betAmount, selectedColor)}
-            disabled={currentRound?.status === 'spinning'}
           >
-            Place Bet ({betAmount} TON)
+            🎯 Place Bet ({betAmount} TON)
           </button>
+        </div>
+      )}
+
+      {/* Статус спининга */}
+      {currentRound?.status === 'spinning' && (
+        <div className="spinning-status">
+          <div className="spinning-text">🎰 Spinning...</div>
         </div>
       )}
 
       {/* Результат */}
       {winner && (
         <div className="winner-section">
+          <div className="winner-crown">👑</div>
           <div className="winner-announcement">
-            🎉 {winner.firstName} wins {currentRound?.totalPool} TON!
+            {winner.firstName} wins!
+          </div>
+          <div className="winner-prize">
+            {currentRound?.totalPool} TON
           </div>
           <button className="new-round-button" onClick={resetRound}>
-            New Round
+            🔄 New Round
           </button>
         </div>
       )}
 
       {/* Список игроков */}
       <div className="players-list">
-        <h3>Players in Pool</h3>
+        <h3>🎮 Players in Pool</h3>
         {currentRound?.players.map((player, index) => (
-          <div key={index} className="player-item">
+          <div key={index} className={`player-item ${winner?.userId === player.userId ? 'winner-player' : ''}`}>
             <div className="player-color" style={{ backgroundColor: player.color }} />
-            <span className="player-name">{player.firstName}</span>
-            <span className="player-bet">{player.bet} TON</span>
-            <span className="player-share">
-              {((player.bet / (currentRound?.totalPool || 1)) * 100).toFixed(1)}%
-            </span>
+            <div className="player-info">
+              <span className="player-name">
+                {player.firstName}
+                {winner?.userId === player.userId && ' 👑'}
+              </span>
+              <span className="player-username">@{player.username}</span>
+            </div>
+            <div className="player-stats">
+              <span className="player-bet">{player.bet} TON</span>
+              <span className="player-share">
+                {((player.bet / (currentRound?.totalPool || 1)) * 100).toFixed(1)}%
+              </span>
+            </div>
           </div>
         ))}
         {(!currentRound?.players || currentRound.players.length === 0) && (
-          <div className="no-players">No players yet. Be the first!</div>
+          <div className="no-players">
+            <p>No players yet</p>
+            <p className="no-players-sub">Be the first to join!</p>
+          </div>
         )}
       </div>
     </div>

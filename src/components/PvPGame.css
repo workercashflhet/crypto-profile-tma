@@ -227,3 +227,72 @@
   padding: 20px;
   font-size: 14px;
 }
+
+.spinning-status {
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.spinning-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #FFD700;
+  animation: spinPulse 0.5s infinite;
+}
+
+@keyframes spinPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.winner-crown {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.winner-prize {
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 16px;
+}
+
+.winner-player {
+  background: rgba(255, 215, 0, 0.1) !important;
+  border: 1px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.player-username {
+  font-size: 11px;
+  color: var(--tg-theme-hint-color, #8e8e93);
+}
+
+.player-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.no-players {
+  text-align: center;
+  padding: 20px;
+}
+
+.no-players p {
+  color: var(--tg-theme-hint-color, #8e8e93);
+  margin: 4px 0;
+}
+
+.no-players-sub {
+  font-size: 12px;
+  opacity: 0.7;
+}

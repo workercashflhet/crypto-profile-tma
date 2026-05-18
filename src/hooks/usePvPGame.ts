@@ -2,8 +2,17 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { PvPRound, PvPPlayer } from '../types/pvp';
 import { useTelegramUser } from './useTelegramUser';
 
-const ROUND_DURATION = 30; // секунд
-const COLORS: string[] = ['#2196F3', '#E91E63', '#00BCD4']; // blue, pink, cyan
+const ROUND_DURATION = 30;
+const COLORS: string[] = ['#2196F3', '#E91E63', '#00BCD4'];
+
+// Мок-игроки для мультиплеера
+const MOCK_PLAYERS: PvPPlayer[] = [
+  { userId: 1001, username: 'crypto_whale', firstName: 'Whale', bet: 0, color: 'blue' },
+  { userId: 1002, username: 'ton_master', firstName: 'Master', bet: 0, color: 'pink' },
+  { userId: 1003, username: 'defi_king', firstName: 'King', bet: 0, color: 'cyan' },
+  { userId: 1004, username: 'nft_pro', firstName: 'Pro', bet: 0, color: 'blue' },
+  { userId: 1005, username: 'hodler', firstName: 'Hodler', bet: 0, color: 'pink' },
+];
 
 export const usePvPGame = () => {
   const { user } = useTelegramUser();
@@ -14,6 +23,7 @@ export const usePvPGame = () => {
   const [rotationAngle, setRotationAngle] = useState(0);
   const [winner, setWinner] = useState<PvPPlayer | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const botsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Инициализация нового раунда
   const initRound = useCallback(() => {
@@ -34,6 +44,69 @@ export const usePvPGame = () => {
     setRotationAngle(0);
   }, [user]);
 
+  // Добавление ботов-игроков для мультиплеера
+  const addBotPlayer = useCallback(() => {
+    setCurrentRound(prev => {
+      if (!prev) return prev;
+      if (prev.status === 'finished' || prev.status === 'spinning') return prev;
+      if (prev.timeLeft <= 5) return prev; // Не добавляем в последние 5 секунд
+
+      // Выбираем случайного бота, который еще не в игре
+      const availableBots = MOCK_PLAYERS.filter(
+        bot => !prev.players.find(p => p.userId === bot.userId)
+      );
+      
+      if (availableBots.length === 0) return prev;
+
+      const randomBot = availableBots[Math.floor(Math.random() * availableBots.length)];
+      const randomBet = Math.floor(Math.random() * 50) + 5; // 5-55 TON
+      const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+      const newBotPlayer: PvPPlayer = {
+        ...randomBot,
+        bet: randomBet,
+        color: randomColor as 'blue' | 'pink' | 'cyan',
+      };
+
+      const updatedPlayers = [...prev.players, newBotPlayer];
+      const updatedPool = updatedPlayers.reduce((sum, p) => sum + p.bet, 0);
+      const newStatus = prev.players.length === 0 ? 'active' : prev.status;
+
+      return {
+        ...prev,
+        players: updatedPlayers,
+        totalPool: updatedPool,
+        status: newStatus,
+      };
+    });
+  }, []);
+
+  // Запуск ботов
+  useEffect(() => {
+    if (!currentRound || currentRound.status !== 'active') {
+      if (botsTimerRef.current) {
+        clearInterval(botsTimerRef.current);
+        botsTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Добавляем ботов каждые 3-7 секунд
+    botsTimerRef.current = setInterval(() => {
+      const randomDelay = Math.random() * 4000 + 3000;
+      setTimeout(() => {
+        addBotPlayer();
+      }, randomDelay);
+    }, 5000);
+
+    return () => {
+      if (botsTimerRef.current) {
+        clearInterval(botsTimerRef.current);
+        botsTimerRef.current = null;
+      }
+    };
+  }, [currentRound?.status, addBotPlayer]);
+
   // Таймер обратного отсчета
   useEffect(() => {
     if (!currentRound || currentRound.status !== 'active') return;
@@ -45,6 +118,10 @@ export const usePvPGame = () => {
         const newTimeLeft = prev.timeLeft - 1;
         
         if (newTimeLeft <= 0) {
+          if (prev.players.length === 0) {
+            // Если нет игроков, начинаем новый раунд
+            return { ...prev, timeLeft: ROUND_DURATION, status: 'waiting' };
+          }
           return { ...prev, timeLeft: 0, status: 'spinning' };
         }
         
@@ -66,7 +143,6 @@ export const usePvPGame = () => {
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return;
     if (amount <= 0) return;
 
-    // Проверяем, не делал ли уже игрок ставку
     const existingPlayer = currentRound.players.find(p => p.userId === user.id);
     if (existingPlayer) return;
 
@@ -84,7 +160,6 @@ export const usePvPGame = () => {
 
       const updatedPlayers = [...prev.players, newPlayer];
       const updatedPool = updatedPlayers.reduce((sum, p) => sum + p.bet, 0);
-      
       const newStatus = prev.players.length === 0 ? 'active' : prev.status;
 
       return {
@@ -94,13 +169,19 @@ export const usePvPGame = () => {
         status: newStatus,
       };
     });
-  }, [user, currentRound]);
+
+    // После ставки игрока, быстро добавляем 1-2 ботов
+    setTimeout(() => {
+      addBotPlayer();
+      setTimeout(() => addBotPlayer(), 1500);
+    }, 1000);
+  }, [user, currentRound, addBotPlayer]);
 
   // Вычисление углов секторов
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
 
-    const segments = currentRound.players.map((player, index) => {
+    return currentRound.players.map((player, index) => {
       const percentage = (player.bet / currentRound.totalPool) * 100;
       const startAngle = index === 0 ? 0 : 
         currentRound.players.slice(0, index).reduce((sum, p) => 
@@ -116,8 +197,6 @@ export const usePvPGame = () => {
         endAngle,
       };
     });
-
-    return segments;
   }, [currentRound]);
 
   // Спин колеса
@@ -128,15 +207,12 @@ export const usePvPGame = () => {
     setIsSpinning(true);
     setCurrentRound(prev => prev ? { ...prev, status: 'spinning' } : prev);
 
-    // Случайный угол для остановки
     const randomAngle = Math.random() * 360;
-    const totalRotation = 3600 + randomAngle; // 10 полных оборотов + случайный угол
+    const totalRotation = 3600 + randomAngle;
     setRotationAngle(totalRotation);
 
-    // Определяем победителя через 5 секунд
     setTimeout(() => {
       const segments = calculateSegments();
-      
       const normalizedAngle = randomAngle;
       
       let winnerPlayer: PvPPlayer | undefined;
@@ -169,17 +245,19 @@ export const usePvPGame = () => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (botsTimerRef.current) {
+      clearInterval(botsTimerRef.current);
+      botsTimerRef.current = null;
+    }
     initRound();
   }, [initRound]);
 
-  // Инициализация при монтировании
+  // Инициализация
   useEffect(() => {
     initRound();
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (botsTimerRef.current) clearInterval(botsTimerRef.current);
     };
   }, [initRound]);
 
