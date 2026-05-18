@@ -1,7 +1,5 @@
 {
   "url": "https://crypto-profile-tma.vercel.app",
   "name": "Crypto Profile",
-  "iconUrl": "https://crypto-profile-tma.vercel.app/icon.png",
-  "termsOfUseUrl": "https://crypto-profile-tma.vercel.app/terms",
-  "privacyPolicyUrl": "https://crypto-profile-tma.vercel.app/privacy"
+  "iconUrl": "https://crypto-profile-tma.vercel.app/icon.png"
 }
