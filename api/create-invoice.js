@@ -1,13 +1,14 @@
 // api/create-invoice.js
-// Эта функция будет доступна по адресу: https://ваш-домен.vercel.app/api/create-invoice
+export default async function handler(req, res) {
+  // Разрешаем CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-const { Bot } = require('grammy');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-// Инициализируем бота с токеном из переменных окружения
-const bot = new Bot(process.env.BOT_TOKEN);
-
-module.exports = async (req, res) => {
-  // Разрешаем только POST запросы
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -19,34 +20,48 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid amount' });
     }
 
-    // Создаем ссылку на инвойс через Telegram API
-    const invoiceLink = await bot.api.createInvoiceLink({
-      title: 'Deposit Stars',
-      description: `${amount} Stars to game balance`,
-      payload: JSON.stringify({ 
-        amount: amount, 
-        type: 'stars_deposit',
-        timestamp: Date.now()
+    const BOT_TOKEN = process.env.BOT_TOKEN;
+    
+    if (!BOT_TOKEN) {
+      console.error('BOT_TOKEN not configured');
+      return res.status(500).json({ error: 'Bot token not configured' });
+    }
+
+    // Делаем прямой запрос к Telegram API без библиотек
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Deposit Stars',
+        description: `${amount} Stars to game balance`,
+        payload: JSON.stringify({ amount, type: 'stars_deposit' }),
+        currency: 'XTR',
+        prices: [{ label: `${amount} Stars`, amount: Math.floor(amount) }],
       }),
-      currency: 'XTR', // Код валюты Telegram Stars
-      prices: [{ 
-        label: `${amount} Stars`, 
-        amount: Math.floor(amount) 
-      }],
     });
 
-    // Отправляем ссылку обратно на фронтенд
-    res.status(200).json({ 
+    const data = await response.json();
+
+    if (!data.ok) {
+      console.error('Telegram API error:', data);
+      return res.status(500).json({ 
+        error: 'Failed to create invoice',
+        details: data.description 
+      });
+    }
+
+    return res.status(200).json({ 
       success: true,
-      invoiceLink: invoiceLink 
+      invoiceLink: data.result 
     });
 
   } catch (error) {
-    console.error('Invoice creation error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to create invoice',
-      details: error.message 
+    console.error('Server error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message 
     });
   }
-};
+}
