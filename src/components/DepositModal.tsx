@@ -1,111 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { CurrencyType } from '../types/pvp';
-import { Address, beginCell, toNano } from '@ton/ton';
+import { OWNER_WALLET, USDT_MASTER, createTonTransfer, createUsdtTransfer } from '../services/tonService';
 import './DepositModal.css';
 
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onDeposit: (amount: number, currency: CurrencyType) => void;
+  onDepositSuccess: (amount: number, currency: CurrencyType) => void;
   balance: { ton: number; usdt: number };
 }
 
-const OWNER_WALLET = 'UQC5ZUl4Qobq69CgLi7tg-8y6aOwVilc5b82jJFZShtnetrw';
-const USDT_MASTER = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs';
-
-const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDeposit, balance }) => {
+const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositSuccess, balance }) => {
   const [amount, setAmount] = useState<string>('');
   const [currency, setCurrency] = useState<CurrencyType>('ton');
-  const [step, setStep] = useState<'input' | 'processing' | 'success'>('input');
+  const [step, setStep] = useState<'input' | 'sending' | 'success'>('input');
+  const [error, setError] = useState<string | null>(null);
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
 
+  // Сброс состояния при закрытии
+  useEffect(() => {
+    if (!isOpen) {
+      setAmount('');
+      setStep('input');
+      setError(null);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const parsedAmount = parseFloat(amount);
-  const isValidAmount = !isNaN(parsedAmount) && parsedAmount > 0;
-
   const handleDeposit = async () => {
-    if (!isValidAmount) return;
+    const numAmount = parseFloat(amount);
+    if (!numAmount || numAmount <= 0) return;
 
     if (!wallet) {
-      alert('Please connect your wallet in Profile tab first');
+      setError('Please connect your wallet first');
       return;
     }
 
-    setStep('processing');
+    setStep('sending');
+    setError(null);
 
     try {
       if (currency === 'ton') {
-        // Прямой перевод TON
-        const transaction = {
-          validUntil: Math.floor(Date.now() / 1000) + 600,
+        // Отправка TON напрямую на адрес овнера
+        const tx = createTonTransfer(numAmount);
+        
+        await tonConnectUI.sendTransaction({
+          validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
           messages: [
             {
-              address: OWNER_WALLET,
-              amount: toNano(parsedAmount).toString(),
+              address: tx.to,
+              amount: tx.value,
             },
           ],
-        };
-
-        const result = await tonConnectUI.sendTransaction(transaction);
-        
-        // Проверяем результат транзакции
-        if (result && result.boc) {
-          // Транзакция успешна - пополняем баланс
-          onDeposit(parsedAmount, currency);
-          setStep('success');
-          setTimeout(() => {
-            handleClose();
-          }, 2000);
-        }
+        });
       } else {
-        // Перевод USDT (Jetton)
-        const ownerAddress = Address.parse(OWNER_WALLET);
+        // Отправка USDT через jetton-контракт
+        const tx = await createUsdtTransfer(wallet.account.address, numAmount);
         
-        const body = beginCell()
-          .storeUint(0xf8a7ea5, 32) // opcode transfer
-          .storeUint(0, 64) // query_id
-          .storeCoins(toNano(parsedAmount)) // amount in nanoUSDT
-          .storeAddress(ownerAddress) // destination
-          .storeAddress(ownerAddress) // response_destination
-          .storeBit(false) // custom payload
-          .storeCoins(1) // forward amount
-          .storeBit(false) // forward payload
-          .endCell();
-
-        const transaction = {
-          validUntil: Math.floor(Date.now() / 1000) + 600,
+        await tonConnectUI.sendTransaction({
+          validUntil: Math.floor(Date.now() / 1000) + 300,
           messages: [
             {
-              address: USDT_MASTER,
-              amount: toNano(0.05).toString(),
-              payload: body.toBoc().toString('base64'),
+              address: tx.to, // Адрес jetton-мастера USDT
+              amount: tx.value, // Комиссия 0.05 TON
+              payload: tx.payload, // Данные для jetton-трансфера
             },
           ],
-        };
-
-        const result = await tonConnectUI.sendTransaction(transaction);
-        
-        if (result && result.boc) {
-          onDeposit(parsedAmount, currency);
-          setStep('success');
-          setTimeout(() => {
-            handleClose();
-          }, 2000);
-        }
+        });
       }
-    } catch (error) {
-      console.error('Transaction failed:', error);
+
+      // Транзакция успешна
+      setStep('success');
+      onDepositSuccess(numAmount, currency);
+      
+      // Автозакрытие через 3 секунды
+      setTimeout(() => {
+        onClose();
+      }, 3000);
+    } catch (err: any) {
+      console.error('Deposit error:', err);
+      setError(err?.message || 'Transaction failed. Please try again.');
       setStep('input');
-      alert('Transaction failed. Please try again.');
     }
   };
 
   const handleClose = () => {
     setAmount('');
     setStep('input');
+    setError(null);
     onClose();
   };
 
@@ -142,64 +127,61 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDeposit,
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount"
               min="0"
-              step="0.1"
             />
 
-            <div className="deposit-info-box">
-              <div className="deposit-info-row">
-                <span>To wallet:</span>
-                <code>{OWNER_WALLET.slice(0, 6)}...{OWNER_WALLET.slice(-4)}</code>
-              </div>
-              {currency === 'usdt' && (
-                <div className="deposit-info-row">
-                  <span>Network fee:</span>
-                  <span>~0.05 TON</span>
-                </div>
-              )}
-            </div>
+            {error && <div className="deposit-error">{error}</div>}
 
             <button
               className="deposit-button"
               onClick={handleDeposit}
-              disabled={!isValidAmount}
+              disabled={!amount || parseFloat(amount) <= 0 || !wallet}
             >
-              💳 Pay with TON Wallet {isValidAmount ? `(${parsedAmount} ${currency.toUpperCase()})` : ''}
+              {!wallet ? 'Connect wallet to deposit' : `Deposit ${amount || '0'} ${currency.toUpperCase()}`}
             </button>
 
-            {!wallet && (
-              <p className="deposit-warning">
-                ⚠️ Connect your TON wallet first in Profile tab
+            <div className="deposit-info-box">
+              <p className="deposit-info-title">How it works:</p>
+              <p className="deposit-info-text">
+                {currency === 'ton' 
+                  ? `TON will be sent directly to app wallet`
+                  : `USDT will be sent via TON blockchain to app wallet`
+                }
               </p>
-            )}
+              <p className="deposit-info-address">
+                Destination: {OWNER_WALLET.slice(0, 8)}...{OWNER_WALLET.slice(-6)}
+              </p>
+            </div>
           </>
         )}
 
-        {step === 'processing' && (
+        {step === 'sending' && (
           <>
-            <h2 className="modal-title">Processing Payment</h2>
-            <div className="processing-spinner" />
-            <p className="processing-text">
-              Confirm the transaction in your TON wallet...
-            </p>
-            <div className="processing-amount">
-              {parsedAmount} {currency.toUpperCase()}
+            <h2 className="modal-title">Sending Transaction</h2>
+            <div className="sending-animation">
+              <div className="spinner" />
+              <p>Please confirm the transaction in your wallet...</p>
             </div>
           </>
         )}
 
         {step === 'success' && (
           <>
-            <h2 className="modal-title">✅ Payment Successful!</h2>
-            <div className="success-icon">✅</div>
-            <p className="success-text">
-              +{parsedAmount} {currency.toUpperCase()} added to your balance
-            </p>
+            <h2 className="modal-title">✅ Success!</h2>
+            <div className="success-info">
+              <p>Deposited {amount} {currency.toUpperCase()}</p>
+              <p>Balance will update automatically</p>
+            </div>
+            <button className="close-button" onClick={handleClose}>
+              Close
+            </button>
           </>
         )}
 
-        <button className="modal-close" onClick={handleClose}>
-          ✕
-        </button>
+        {step === 'input' && (
+          <button className="modal-close" onClick={handleClose}>
+            ✕
+          </button>
+        )}
       </div>
     </div>
   );
