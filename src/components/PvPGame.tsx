@@ -5,6 +5,8 @@ import LuckyWheel from './LuckyWheel';
 import DepositModal from './DepositModal';
 import './PvPGame.css';
 
+const TON_TO_STARS_RATE = 76; // 1 TON ≈ 76 Stars
+
 const PvPGame: React.FC = () => {
   const {
     currentRound,
@@ -25,7 +27,6 @@ const PvPGame: React.FC = () => {
   } = usePvPGame();
 
   const segments = calculateSegments();
-  const myTotalBet = playerBets.reduce((sum, b) => sum + b.amount, 0);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
 
   useEffect(() => {
@@ -63,18 +64,23 @@ const PvPGame: React.FC = () => {
     return parts.join(' + ');
   };
 
-  const calculateWinChance = (player: { totalBet: number }): string => {
+  // ПРАВИЛЬНЫЙ расчет шанса с учетом курса TON/Stars
+  const calculateWinChance = (player: { bets: { amount: number; currency: CurrencyType }[] }): string => {
     if (!currentRound) return '0';
     
-    const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolStars;
-    if (totalPoolValue === 0) return '0';
+    const tonBets = player.bets.filter(b => b.currency === 'ton').reduce((sum, b) => sum + b.amount, 0);
+    const starsBets = player.bets.filter(b => b.currency === 'stars').reduce((sum, b) => sum + b.amount, 0);
     
-    return ((player.totalBet / totalPoolValue) * 100).toFixed(1);
+    const playerValueInStars = (tonBets * TON_TO_STARS_RATE) + starsBets;
+    const totalPoolInStars = (currentRound.totalPoolTon * TON_TO_STARS_RATE) + currentRound.totalPoolStars;
+    
+    if (totalPoolInStars === 0) return '0';
+    
+    return ((playerValueInStars / totalPoolInStars) * 100).toFixed(1);
   };
 
   return (
     <div className="pvp-game">
-      {/* Баланс и кнопка депозита */}
       <div className="player-balance-bar">
         <div 
           className={`balance-item-small ${selectedCurrency === 'ton' ? 'active-currency' : ''}`}
@@ -95,13 +101,10 @@ const PvPGame: React.FC = () => {
         </button>
       </div>
 
-      {/* Мои ставки */}
       {playerBets.length > 0 && (
         <div className="my-bets-bar">
           <span>My bets: {formatPlayerBets({ bets: playerBets })}</span>
-          <span className="bets-count">
-            {calculateWinChance({ totalBet: myTotalBet })}%
-          </span>
+          <span className="bets-count">{calculateWinChance({ bets: playerBets })}%</span>
         </div>
       )}
 
@@ -176,14 +179,12 @@ const PvPGame: React.FC = () => {
           >
             Place Bet ({betAmount} {selectedCurrency === 'ton' ? 'TON' : 'Stars'})
           </button>
-          <p className="color-auto-text">You can place multiple bets • Color assigned automatically</p>
+          <p className="color-auto-text">Wish you luck! • You the best!</p>
         </div>
       )}
 
       {currentRound?.status === 'spinning' && (
-        <div className="spinning-status">
-          <div className="spinning-text">Spinning...</div>
-        </div>
+        <div className="spinning-status"><div className="spinning-text">Spinning...</div></div>
       )}
 
       {winner && (
@@ -193,12 +194,8 @@ const PvPGame: React.FC = () => {
             className="winner-avatar"
             onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${winner.userId}`; }}
           />
-          <div className="winner-announcement">
-            👑 {winner.firstName} wins!
-          </div>
-          <div className="winner-prize">
-            {getTotalPool()}
-          </div>
+          <div className="winner-announcement">👑 {winner.firstName} wins!</div>
+          <div className="winner-prize">{getTotalPool()}</div>
         </div>
       )}
 
@@ -213,25 +210,17 @@ const PvPGame: React.FC = () => {
               onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`; }}
             />
             <div className="player-info">
-              <span className="player-name">
-                {player.firstName}
-                {winner?.userId === player.userId && ' 👑'}
-              </span>
+              <span className="player-name">{player.firstName}{winner?.userId === player.userId && ' 👑'}</span>
               <span className="player-username">@{player.username}</span>
             </div>
             <div className="player-stats">
               <span className="player-bet">{formatPlayerBets(player)}</span>
-              <span className="player-share">
-                {calculateWinChance(player)}%
-              </span>
+              <span className="player-share">{calculateWinChance(player)}%</span>
             </div>
           </div>
         ))}
         {(!currentRound?.players || currentRound.players.length === 0) && (
-          <div className="no-players">
-            <p>No players yet</p>
-            <p className="no-players-sub">Be the first to join!</p>
-          </div>
+          <div className="no-players"><p>No players yet</p><p className="no-players-sub">Be the first to join!</p></div>
         )}
       </div>
 

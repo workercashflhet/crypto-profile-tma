@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import UserProfile from './components/UserProfile';
 import WalletConnect from './components/WalletConnect';
-import Balance from './components/Balance';
 import PvPGame from './components/PvPGame';
 import './App.css';
 
@@ -20,7 +19,6 @@ const AppContent: React.FC = () => {
           <>
             <UserProfile />
             <WalletConnect />
-            <Balance />
           </>
         ) : (
           <PvPGame />

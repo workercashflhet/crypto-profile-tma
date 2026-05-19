@@ -153,16 +153,10 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
               {currency === 'ton' && !wallet
                 ? 'Connect wallet in Profile'
                 : currency === 'ton'
-                  ? `Send ${amount} TON via wallet`
+                  ? `Deposit ${amount} TON`
                   : `Pay ${amount || '0'} Stars`
               }
             </button>
-
-            {currency === 'ton' && (
-              <p className="deposit-info-text">
-                TON will be sent to: {OWNER_WALLET.slice(0, 8)}...{OWNER_WALLET.slice(-6)}
-              </p>
-            )}
           </>
         )}
 
