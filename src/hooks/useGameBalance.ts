@@ -29,6 +29,7 @@ export const useGameBalance = () => {
       
       if (stored) {
         const parsed = JSON.parse(stored);
+        
         if (!refilled) {
           const newBalance = {
             ton: (parsed.ton || 0) + REFILL_AMOUNT.ton,
@@ -44,7 +45,10 @@ export const useGameBalance = () => {
           });
         }
       } else {
-        const initialBalance: GameBalance = { ton: 2000, stars: 2000 };
+        const initialBalance: GameBalance = {
+          ton: 2000,
+          stars: 2000,
+        };
         localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(initialBalance));
         localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
         setBalance(initialBalance);
@@ -58,12 +62,6 @@ export const useGameBalance = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
-
-  const saveBalance = useCallback((newBalance: GameBalance) => {
-    if (!user) return;
-    localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-    setBalance(newBalance);
   }, [user]);
 
   const depositTon = useCallback((amount: number) => {
@@ -118,6 +116,5 @@ export const useGameBalance = () => {
     withdrawStars,
     hasEnoughTon,
     hasEnoughStars,
-    saveBalance,
   };
 };

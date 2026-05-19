@@ -21,6 +21,7 @@ const PvPGame: React.FC = () => {
     calculateSegments,
     placeBet,
     spinWheel,
+    resetRound,
     getTotalPool,
   } = usePvPGame();
 
@@ -87,8 +88,8 @@ const PvPGame: React.FC = () => {
           className={`balance-item-small ${selectedCurrency === 'stars' ? 'active-currency' : ''}`}
           onClick={() => setSelectedCurrency('stars')}
         >
-          <img src="/stars.png" alt="Stars" className="balance-icon-small" />
-          <span className="balance-value-small">{balance.stars.toFixed(0)} ⭐</span>
+          <span className="balance-icon-small">⭐</span>
+          <span className="balance-value-small">{balance.stars.toFixed(0)} Stars</span>
         </div>
         <button 
           className="deposit-nav-button"
@@ -258,6 +259,7 @@ const PvPGame: React.FC = () => {
         )}
       </div>
 
+      {/* Модальное окно депозита */}
       <DepositModal
         isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}
