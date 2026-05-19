@@ -50,7 +50,6 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
             transition: isSpinning ? 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
           }}
         >
-          {/* Аватарки строго по центру области каждого игрока */}
           {segments.map((segment, index) => {
             const midAngle = segment.startAngle + (segment.endAngle - segment.startAngle) / 2;
             
@@ -78,10 +77,9 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
           })}
         </div>
         
-        {/* Таймер в центре */}
         <div className="wheel-center-solid">
           <svg className="timer-circle-svg" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="#1a1a2e" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+            <circle cx="50" cy="50" r="42" fill="#000000" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
             <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="3"
               strokeDasharray={`${(timeLeft / 30) * 264} 264`}
               strokeLinecap="round" transform="rotate(-90 50 50)"

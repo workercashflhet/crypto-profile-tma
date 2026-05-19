@@ -409,9 +409,11 @@ export const usePvPGame = () => {
   // Форматирование пула
   const getTotalPool = useCallback(() => {
     if (!currentRound) return '0';
-    const totalUsd = getTotalPoolUsd(currentRound);
-    return `$${totalUsd.toFixed(2)}`;
-  }, [currentRound, getTotalPoolUsd]);
+    const parts: string[] = [];
+    if (currentRound.totalPoolTon > 0) parts.push(`${currentRound.totalPoolTon} TON`);
+    if (currentRound.totalPoolUsdt > 0) parts.push(`${currentRound.totalPoolUsdt} USDT`);
+    return parts.join(' + ') || '0';
+  }, [currentRound]);
 
   return {
     currentRound,

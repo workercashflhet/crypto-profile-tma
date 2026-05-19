@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePvPGame } from '../hooks/usePvPGame';
 import { CurrencyType } from '../types/pvp';
 import LuckyWheel from './LuckyWheel';
+import DepositModal from './DepositModal';
 import './PvPGame.css';
 
 const PvPGame: React.FC = () => {
@@ -26,6 +27,7 @@ const PvPGame: React.FC = () => {
 
   const segments = calculateSegments();
   const myTotalBet = playerBets.reduce((sum, b) => sum + b.amount, 0);
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
 
   useEffect(() => {
     if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
@@ -40,6 +42,12 @@ const PvPGame: React.FC = () => {
 
   const handlePlaceBet = () => {
     placeBet(betAmount, selectedCurrency);
+  };
+
+  const handleDeposit = (amount: number, currency: CurrencyType) => {
+    // Здесь будет логика пополнения через TON кошелек
+    console.log(`Deposit ${amount} ${currency}`);
+    // После успешной транзакции баланс обновится автоматически
   };
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.usdt;
@@ -69,7 +77,7 @@ const PvPGame: React.FC = () => {
 
   return (
     <div className="pvp-game">
-      {/* Баланс */}
+      {/* Баланс и кнопка депозита */}
       <div className="player-balance-bar">
         <div 
           className={`balance-item-small ${selectedCurrency === 'ton' ? 'active-currency' : ''}`}
@@ -85,6 +93,12 @@ const PvPGame: React.FC = () => {
           <img src="/ustd.png" alt="USDT" className="balance-icon-small" />
           <span className="balance-value-small">{balance.usdt.toFixed(1)} USDT</span>
         </div>
+        <button 
+          className="deposit-nav-button"
+          onClick={() => setIsDepositOpen(true)}
+        >
+          + Deposit
+        </button>
       </div>
 
       {/* Мои ставки */}
@@ -208,9 +222,6 @@ const PvPGame: React.FC = () => {
           <div className="winner-prize">
             {getTotalPool()}
           </div>
-          <button className="new-round-button" onClick={resetRound}>
-            🔄 New Round
-          </button>
         </div>
       )}
 
@@ -249,6 +260,14 @@ const PvPGame: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Модальное окно депозита */}
+      <DepositModal
+        isOpen={isDepositOpen}
+        onClose={() => setIsDepositOpen(false)}
+        onDeposit={handleDeposit}
+        balance={balance}
+      />
     </div>
   );
 };
