@@ -58,6 +58,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  /* Выравнивание иконки и текста */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .currency-btn.active {
@@ -172,4 +177,5 @@
   height: 20px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
 }

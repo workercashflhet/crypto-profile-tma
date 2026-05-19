@@ -152,6 +152,20 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  /* Выравнивание иконки и текста */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.currency-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* Убираем margin-right, используем gap в родителе */
+  flex-shrink: 0;
 }
 
 .currency-btn.active {
