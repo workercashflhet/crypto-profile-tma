@@ -268,7 +268,7 @@ const PvPGame: React.FC = () => {
       <DepositModal
         isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}
-        onDeposit={handleDeposit}
+        onDepositSuccess={handleDeposit}
         balance={balance}
       />
     </div>
