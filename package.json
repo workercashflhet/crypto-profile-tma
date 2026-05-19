@@ -15,6 +15,7 @@
     "@ton/ton": "^14.0.0",
     "@tonconnect/ui-react": "^2.0.2",
     "axios": "^1.16.1",
+    "grammy": "^1.43.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "vite-plugin-node-polyfills": "^0.28.0"
