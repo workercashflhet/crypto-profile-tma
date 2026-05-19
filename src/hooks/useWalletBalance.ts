@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTonWallet } from '@tonconnect/ui-react';
-import { getTonBalance, getUsdtBalance } from '../services/tonService';
+import { getTonBalance } from '../services/tonService';
 
 interface WalletBalances {
   ton: number;
-  usdt: number;
+  stars: number;
   isLoading: boolean;
   error: string | null;
 }
@@ -13,7 +13,7 @@ export const useWalletBalance = (): WalletBalances => {
   const wallet = useTonWallet();
   const [balances, setBalances] = useState<WalletBalances>({
     ton: 0,
-    usdt: 0,
+    stars: 0,
     isLoading: false,
     error: null,
   });
@@ -26,14 +26,11 @@ export const useWalletBalance = (): WalletBalances => {
     setBalances(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const [tonBalance, usdtBalance] = await Promise.all([
-        getTonBalance(address),
-        getUsdtBalance(address),
-      ]);
+      const tonBalance = await getTonBalance(address);
 
       setBalances({
         ton: tonBalance,
-        usdt: usdtBalance,
+        stars: 0, // Stars не на блокчейне TON
         isLoading: false,
         error: null,
       });

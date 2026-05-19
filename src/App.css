@@ -60,6 +60,7 @@ body {
   justify-content: space-around;
   padding: 0 20px;
   z-index: 100;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 

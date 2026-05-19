@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { CurrencyType } from '../types/pvp';
-import { OWNER_WALLET, createTonTransfer, createUsdtTransfer } from '../services/tonService';
+import { OWNER_WALLET, createTonTransfer, createStarsInvoice } from '../services/tonService';
 import './DepositModal.css';
 
 interface DepositModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDepositSuccess: (amount: number, currency: CurrencyType) => void;
-  balance: { ton: number; usdt: number };
+  balance: { ton: number; stars: number };
 }
 
 const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositSuccess, balance }) => {
@@ -55,29 +55,44 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           ],
         });
       } else {
-        const tx = createUsdtTransfer(numAmount);
+        // Telegram Stars - открываем инвойс
+        const invoice = createStarsInvoice(numAmount);
         
-        await tonConnectUI.sendTransaction({
-          validUntil: Math.floor(Date.now() / 1000) + 300,
-          messages: [
-            {
-              address: tx.to,
-              amount: tx.value,
-              payload: tx.payload,
-            },
-          ],
-        });
+        // @ts-ignore
+        const tg = window.Telegram?.WebApp;
+        
+        if (tg?.openInvoice) {
+          tg.openInvoice(
+            `https://t.me/${
+              tg.initDataUnsafe?.user?.username || 'stars'
+            }?star_count=${numAmount}`,
+            (status: string) => {
+              if (status === 'paid') {
+                setStep('success');
+                onDepositSuccess(numAmount, currency);
+                setTimeout(() => onClose(), 3000);
+              } else {
+                setError('Payment was not completed');
+                setStep('input');
+              }
+            }
+          );
+        } else {
+          // Fallback: открываем ссылку в браузере
+          window.open(`https://t.me/stars?amount=${numAmount}`, '_blank');
+          setStep('success');
+          onDepositSuccess(numAmount, currency);
+          setTimeout(() => onClose(), 3000);
+        }
+        return;
       }
 
       setStep('success');
       onDepositSuccess(numAmount, currency);
-      
-      setTimeout(() => {
-        onClose();
-      }, 3000);
+      setTimeout(() => onClose(), 3000);
     } catch (err: any) {
       console.error('Deposit error:', err);
-      setError(err?.message || 'Transaction failed. Please try again.');
+      setError(err?.message || 'Transaction failed');
       setStep('input');
     }
   };
@@ -104,15 +119,15 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
                 💎 TON
               </button>
               <button
-                className={`currency-btn ${currency === 'usdt' ? 'active' : ''}`}
-                onClick={() => setCurrency('usdt')}
+                className={`currency-btn ${currency === 'stars' ? 'active' : ''}`}
+                onClick={() => setCurrency('stars')}
               >
-                💵 USDT
+                ⭐ Stars
               </button>
             </div>
 
             <div className="deposit-balance">
-              Balance: {currency === 'ton' ? balance.ton.toFixed(1) : balance.usdt.toFixed(1)} {currency.toUpperCase()}
+              Balance: {currency === 'ton' ? balance.ton.toFixed(1) : balance.stars.toFixed(0)} {currency === 'ton' ? 'TON' : 'Stars'}
             </div>
 
             <input
@@ -133,13 +148,14 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
             >
               {!wallet 
                 ? 'Connect wallet to deposit' 
-                : `Deposit ${amount || '0'} ${currency.toUpperCase()} to app wallet`}
+                : `Deposit ${amount || '0'} ${currency === 'ton' ? 'TON' : 'Stars'}`}
             </button>
 
             <div className="deposit-info-box">
-              <p className="deposit-info-title">Destination wallet:</p>
-              <p className="deposit-info-address">
-                {OWNER_WALLET.slice(0, 10)}...{OWNER_WALLET.slice(-8)}
+              <p className="deposit-info-title">
+                {currency === 'ton' 
+                  ? 'TON will be sent to app wallet'
+                  : 'Stars invoice will be generated'}
               </p>
             </div>
           </>
@@ -147,11 +163,10 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
 
         {step === 'sending' && (
           <>
-            <h2 className="modal-title">Sending Transaction</h2>
+            <h2 className="modal-title">Processing</h2>
             <div className="sending-animation">
               <div className="spinner" />
-              <p>Confirm transaction in your wallet...</p>
-              <p className="sending-amount">{amount} {currency.toUpperCase()}</p>
+              <p>{currency === 'ton' ? 'Confirm transaction...' : 'Opening Stars invoice...'}</p>
             </div>
           </>
         )}
@@ -160,19 +175,14 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           <>
             <h2 className="modal-title">✅ Success!</h2>
             <div className="success-info">
-              <p>Deposited {amount} {currency.toUpperCase()}</p>
-              <p>to app wallet</p>
+              <p>Deposited {amount} {currency === 'ton' ? 'TON' : 'Stars'}</p>
             </div>
-            <button className="close-button" onClick={handleClose}>
-              Close
-            </button>
+            <button className="close-button" onClick={handleClose}>Close</button>
           </>
         )}
 
         {step === 'input' && (
-          <button className="modal-close" onClick={handleClose}>
-            ✕
-          </button>
+          <button className="modal-close" onClick={handleClose}>✕</button>
         )}
       </div>
     </div>

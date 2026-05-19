@@ -3,21 +3,20 @@ import { useTelegramUser } from './useTelegramUser';
 
 interface GameBalance {
   ton: number;
-  usdt: number;
+  stars: number;
 }
 
-const STORAGE_KEY = 'game_balance_v3';
+const STORAGE_KEY = 'game_balance_v4';
 const REFILL_AMOUNT = {
   ton: 1000,
-  usdt: 1000,
+  stars: 1000,
 };
 
 export const useGameBalance = () => {
   const { user } = useTelegramUser();
-  const [balance, setBalance] = useState<GameBalance>({ ton: 0, usdt: 0 });
+  const [balance, setBalance] = useState<GameBalance>({ ton: 0, stars: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка баланса
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -30,11 +29,10 @@ export const useGameBalance = () => {
       
       if (stored) {
         const parsed = JSON.parse(stored);
-        
         if (!refilled) {
           const newBalance = {
             ton: (parsed.ton || 0) + REFILL_AMOUNT.ton,
-            usdt: (parsed.usdt || 0) + REFILL_AMOUNT.usdt,
+            stars: (parsed.stars || 0) + REFILL_AMOUNT.stars,
           };
           localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
           localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
@@ -42,21 +40,18 @@ export const useGameBalance = () => {
         } else {
           setBalance({
             ton: parsed.ton || 0,
-            usdt: parsed.usdt || 0,
+            stars: parsed.stars || 0,
           });
         }
       } else {
-        const initialBalance: GameBalance = {
-          ton: 2000,
-          usdt: 2000,
-        };
+        const initialBalance: GameBalance = { ton: 2000, stars: 2000 };
         localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(initialBalance));
         localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
         setBalance(initialBalance);
       }
     } catch (error) {
       console.error('Error loading game balance:', error);
-      const defaultBalance: GameBalance = { ton: 2000, usdt: 2000 };
+      const defaultBalance: GameBalance = { ton: 2000, stars: 2000 };
       setBalance(defaultBalance);
       localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(defaultBalance));
       localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
@@ -65,84 +60,64 @@ export const useGameBalance = () => {
     }
   }, [user]);
 
-  // Сохранение баланса
   const saveBalance = useCallback((newBalance: GameBalance) => {
     if (!user) return;
     localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
     setBalance(newBalance);
   }, [user]);
 
-  // Пополнение TON - вызывается из DepositModal после успешной транзакции
   const depositTon = useCallback((amount: number) => {
-    if (!user) return;
-    
     setBalance(prev => {
       const newBalance = { ...prev, ton: prev.ton + amount };
-      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-      console.log(`✅ Deposited ${amount} TON. New balance: ${newBalance.ton} TON`);
+      if (user) localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
       return newBalance;
     });
   }, [user]);
 
-  // Пополнение USDT
-  const depositUsdt = useCallback((amount: number) => {
-    if (!user) return;
-    
+  const depositStars = useCallback((amount: number) => {
     setBalance(prev => {
-      const newBalance = { ...prev, usdt: prev.usdt + amount };
-      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-      console.log(`✅ Deposited ${amount} USDT. New balance: ${newBalance.usdt} USDT`);
+      const newBalance = { ...prev, stars: prev.stars + amount };
+      if (user) localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
       return newBalance;
     });
   }, [user]);
 
-  // Списание TON
   const withdrawTon = useCallback((amount: number): boolean => {
-    if (!user) return false;
-    
     let success = false;
     setBalance(prev => {
       if (prev.ton < amount) return prev;
       const newBalance = { ...prev, ton: prev.ton - amount };
-      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
+      if (user) localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
       success = true;
       return newBalance;
     });
     return success;
   }, [user]);
 
-  // Списание USDT
-  const withdrawUsdt = useCallback((amount: number): boolean => {
-    if (!user) return false;
-    
+  const withdrawStars = useCallback((amount: number): boolean => {
     let success = false;
     setBalance(prev => {
-      if (prev.usdt < amount) return prev;
-      const newBalance = { ...prev, usdt: prev.usdt - amount };
-      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
+      if (prev.stars < amount) return prev;
+      const newBalance = { ...prev, stars: prev.stars - amount };
+      if (user) localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
       success = true;
       return newBalance;
     });
     return success;
   }, [user]);
 
-  const hasEnoughTon = useCallback((amount: number): boolean => {
-    return balance.ton >= amount;
-  }, [balance.ton]);
-
-  const hasEnoughUsdt = useCallback((amount: number): boolean => {
-    return balance.usdt >= amount;
-  }, [balance.usdt]);
+  const hasEnoughTon = useCallback((amount: number): boolean => balance.ton >= amount, [balance.ton]);
+  const hasEnoughStars = useCallback((amount: number): boolean => balance.stars >= amount, [balance.stars]);
 
   return {
     balance,
     isLoading,
     depositTon,
-    depositUsdt,
+    depositStars,
     withdrawTon,
-    withdrawUsdt,
+    withdrawStars,
     hasEnoughTon,
-    hasEnoughUsdt,
+    hasEnoughStars,
     saveBalance,
   };
 };

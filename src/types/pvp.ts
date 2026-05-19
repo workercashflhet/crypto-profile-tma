@@ -1,13 +1,13 @@
-export type CurrencyType = 'ton' | 'usdt';
+export type CurrencyType = 'ton' | 'stars';
 
 export interface PvPPlayer {
   userId: number;
   username: string;
   firstName: string;
   avatar?: string;
-  bets: PlayerBet[]; // Теперь массив ставок
-  totalBet: number; // Общая сумма ставок
-  currency: CurrencyType; // Валюта ставки
+  bets: PlayerBet[];
+  totalBet: number;
+  currency: CurrencyType;
   color: string;
 }
 
@@ -21,7 +21,7 @@ export interface PvPRound {
   id: string;
   players: PvPPlayer[];
   totalPoolTon: number;
-  totalPoolUsdt: number;
+  totalPoolStars: number;
   timeLeft: number;
   status: 'waiting' | 'active' | 'spinning' | 'finished';
   winner?: PvPPlayer;

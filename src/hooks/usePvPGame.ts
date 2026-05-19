@@ -24,11 +24,11 @@ export const usePvPGame = () => {
   const {
     balance,
     withdrawTon,
-    withdrawUsdt,
+    withdrawStars,
     depositTon,
-    depositUsdt,
+    depositStars,
     hasEnoughTon,
-    hasEnoughUsdt
+    hasEnoughStars
   } = useGameBalance();
 
   const [currentRound, setCurrentRound] = useState<PvPRound | null>(null);
@@ -47,15 +47,15 @@ export const usePvPGame = () => {
   // Расчет общего пула в USD эквиваленте
   const getTotalPoolUsd = useCallback((round: PvPRound): number => {
     const prices = getTokenPrices();
-    return (round.totalPoolTon * prices.ton) + (round.totalPoolUsdt * prices.usdt);
+    return (round.totalPoolTon * prices.ton) + (round.totalPoolStars * prices.stars);
   }, []);
 
   // Расчет ставки игрока в USD
   const getPlayerBetUsd = useCallback((player: PvPPlayer): number => {
     const prices = getTokenPrices();
     const tonBets = player.bets.filter(b => b.currency === 'ton').reduce((sum, b) => sum + b.amount, 0);
-    const usdtBets = player.bets.filter(b => b.currency === 'usdt').reduce((sum, b) => sum + b.amount, 0);
-    return (tonBets * prices.ton) + (usdtBets * prices.usdt);
+    const starsBets = player.bets.filter(b => b.currency === 'stars').reduce((sum, b) => sum + b.amount, 0);
+    return (tonBets * prices.ton) + (starsBets * prices.stars);
   }, []);
 
   const initRound = useCallback(() => {
@@ -65,7 +65,7 @@ export const usePvPGame = () => {
       id: `round_${Date.now()}`,
       players: [],
       totalPoolTon: 0,
-      totalPoolUsdt: 0,
+      totalPoolStars: 0,
       timeLeft: ROUND_DURATION,
       status: 'waiting',
       timestamp: Date.now(),
@@ -98,7 +98,7 @@ export const usePvPGame = () => {
 
       const randomBot = { ...availableBots[Math.floor(Math.random() * availableBots.length)] };
       const randomBetAmount = Math.floor(Math.random() * 50) + 5;
-      const botCurrency: CurrencyType = Math.random() > 0.3 ? 'ton' : 'usdt';
+      const botCurrency: CurrencyType = Math.random() > 0.3 ? 'ton' : 'stars';
 
       const playerColors = prev.players.map(p => p.color);
       const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
@@ -127,15 +127,15 @@ export const usePvPGame = () => {
       const totalTon = updatedPlayers.reduce((sum, p) => {
         return sum + p.bets.filter(b => b.currency === 'ton').reduce((s, b) => s + b.amount, 0);
       }, 0);
-      const totalUsdt = updatedPlayers.reduce((sum, p) => {
-        return sum + p.bets.filter(b => b.currency === 'usdt').reduce((s, b) => s + b.amount, 0);
+      const totalStars = updatedPlayers.reduce((sum, p) => {
+        return sum + p.bets.filter(b => b.currency === 'stars').reduce((s, b) => s + b.amount, 0);
       }, 0);
 
       return {
         ...prev,
         players: updatedPlayers,
         totalPoolTon: totalTon,
-        totalPoolUsdt: totalUsdt,
+        totalPoolStars: totalStars,
         status: prev.players.length === 0 ? 'active' : prev.status,
       };
     });
@@ -198,6 +198,7 @@ export const usePvPGame = () => {
     if (currentRound.status === 'finished' || currentRound.status === 'spinning') return false;
     if (amount <= 0) return false;
 
+    // Проверяем баланс в зависимости от валюты
     if (currency === 'ton') {
       if (!hasEnoughTon(amount)) {
         setError(`Insufficient TON balance. You have ${balance.ton.toFixed(1)} TON`);
@@ -205,17 +206,18 @@ export const usePvPGame = () => {
         return false;
       }
     } else {
-      if (!hasEnoughUsdt(amount)) {
-        setError(`Insufficient USDT balance. You have ${balance.usdt.toFixed(1)} USDT`);
+      if (!hasEnoughStars(amount)) {
+        setError(`Insufficient Stars balance. You have ${balance.stars.toFixed(0)} ⭐`);
         setTimeout(() => setError(null), 3000);
         return false;
       }
     }
 
+    // Списываем с баланса
     if (currency === 'ton') {
       withdrawTon(amount);
     } else {
-      withdrawUsdt(amount);
+      withdrawStars(amount);
     }
 
     const newBet: PlayerBet = {
@@ -224,8 +226,10 @@ export const usePvPGame = () => {
       timestamp: Date.now(),
     };
 
+    // Обновляем список ставок игрока
     setPlayerBets(prev => [...prev, newBet]);
 
+    // Обновляем раунд
     setCurrentRound(prev => {
       if (!prev) return prev;
 
@@ -233,6 +237,7 @@ export const usePvPGame = () => {
       let updatedPlayers: PvPPlayer[];
 
       if (existingPlayerIndex >= 0) {
+        // Игрок уже есть - добавляем ставку
         updatedPlayers = prev.players.map((p, i) => {
           if (i === existingPlayerIndex) {
             const updatedBets = [...p.bets, newBet];
@@ -247,6 +252,7 @@ export const usePvPGame = () => {
           return p;
         });
       } else {
+        // Новый игрок
         const playerColors = prev.players.map(p => p.color);
         const availableColors = PLAYER_COLORS.filter(c => !playerColors.includes(c));
         const assignedColor = availableColors.length > 0
@@ -270,8 +276,8 @@ export const usePvPGame = () => {
       const totalTon = updatedPlayers.reduce((sum, p) => {
         return sum + p.bets.filter(b => b.currency === 'ton').reduce((s, b) => s + b.amount, 0);
       }, 0);
-      const totalUsdt = updatedPlayers.reduce((sum, p) => {
-        return sum + p.bets.filter(b => b.currency === 'usdt').reduce((s, b) => s + b.amount, 0);
+      const totalStars = updatedPlayers.reduce((sum, p) => {
+        return sum + p.bets.filter(b => b.currency === 'stars').reduce((s, b) => s + b.amount, 0);
       }, 0);
 
       const newStatus = prev.players.length === 0 ? 'active' : prev.status;
@@ -280,11 +286,12 @@ export const usePvPGame = () => {
         ...prev,
         players: updatedPlayers,
         totalPoolTon: totalTon,
-        totalPoolUsdt: totalUsdt,
+        totalPoolStars: totalStars,
         status: newStatus,
       };
     });
 
+    // Добавляем ботов после первой ставки
     if (currentRound.players.length === 0) {
       setTimeout(() => {
         addBotPlayer();
@@ -293,7 +300,7 @@ export const usePvPGame = () => {
     }
 
     return true;
-  }, [user, currentRound, addBotPlayer, withdrawTon, withdrawUsdt, hasEnoughTon, hasEnoughUsdt, balance]);
+  }, [user, currentRound, addBotPlayer, withdrawTon, withdrawStars, hasEnoughTon, hasEnoughStars, balance]);
 
   // Вычисление сегментов на основе USD эквивалента
   const calculateSegments = useCallback(() => {
@@ -357,19 +364,22 @@ export const usePvPGame = () => {
           prev ? { ...prev, status: 'finished', winner: winnerPlayer! } : prev
         );
 
+        // Начисляем выигрыш текущему пользователю
         if (winnerPlayer.userId === user?.id && currentRound) {
           depositTon(currentRound.totalPoolTon);
-          depositUsdt(currentRound.totalPoolUsdt);
+          depositStars(currentRound.totalPoolStars);
         }
 
+        // Автосброс через 10 секунд
         autoResetRef.current = setTimeout(() => {
           initRound();
         }, AUTO_RESET_DELAY);
       }
       setIsSpinning(false);
     }, 5000);
-  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon, depositUsdt, initRound]);
+  }, [currentRound, isSpinning, calculateSegments, user?.id, depositTon, depositStars, initRound]);
 
+  // Сброс раунда
   const resetRound = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -386,6 +396,7 @@ export const usePvPGame = () => {
     initRound();
   }, [initRound]);
 
+  // Инициализация
   useEffect(() => {
     initRound();
     return () => {
@@ -395,11 +406,12 @@ export const usePvPGame = () => {
     };
   }, [initRound]);
 
+  // Форматирование пула
   const getTotalPool = useCallback(() => {
     if (!currentRound) return '0';
     const parts: string[] = [];
     if (currentRound.totalPoolTon > 0) parts.push(`${currentRound.totalPoolTon} TON`);
-    if (currentRound.totalPoolUsdt > 0) parts.push(`${currentRound.totalPoolUsdt} USDT`);
+    if (currentRound.totalPoolStars > 0) parts.push(`${currentRound.totalPoolStars} ⭐`);
     return parts.join(' + ') || '0';
   }, [currentRound]);
 
@@ -421,7 +433,5 @@ export const usePvPGame = () => {
     resetRound,
     getTotalPool,
     getTokenPrices,
-    depositTon,
-    depositUsdt,
   };
 };

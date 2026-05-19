@@ -21,9 +21,8 @@ const PvPGame: React.FC = () => {
     calculateSegments,
     placeBet,
     spinWheel,
+    resetRound,
     getTotalPool,
-    depositTon,
-    depositUsdt,
   } = usePvPGame();
 
   const segments = calculateSegments();
@@ -46,25 +45,21 @@ const PvPGame: React.FC = () => {
   };
 
   const handleDeposit = (amount: number, currency: CurrencyType) => {
-    if (currency === 'ton') {
-      depositTon(amount);
-    } else {
-      depositUsdt(amount);
-    }
+    console.log(`Deposit ${amount} ${currency}`);
   };
 
-  const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.usdt;
+  const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
 
   const formatPlayerBets = (player: { bets: { amount: number; currency: CurrencyType }[] }): string => {
     const tonBets = player.bets.filter(b => b.currency === 'ton');
-    const usdtBets = player.bets.filter(b => b.currency === 'usdt');
+    const starsBets = player.bets.filter(b => b.currency === 'stars');
     
     const tonTotal = tonBets.reduce((sum, b) => sum + b.amount, 0);
-    const usdtTotal = usdtBets.reduce((sum, b) => sum + b.amount, 0);
+    const starsTotal = starsBets.reduce((sum, b) => sum + b.amount, 0);
     
     const parts: string[] = [];
     if (tonTotal > 0) parts.push(`${tonTotal} TON`);
-    if (usdtTotal > 0) parts.push(`${usdtTotal} USDT`);
+    if (starsTotal > 0) parts.push(`${starsTotal} ⭐`);
     
     return parts.join(' + ');
   };
@@ -72,7 +67,7 @@ const PvPGame: React.FC = () => {
   const calculateWinChance = (player: { totalBet: number }): string => {
     if (!currentRound) return '0';
     
-    const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolUsdt;
+    const totalPoolValue = currentRound.totalPoolTon + currentRound.totalPoolStars;
     if (totalPoolValue === 0) return '0';
     
     return ((player.totalBet / totalPoolValue) * 100).toFixed(1);
@@ -90,11 +85,11 @@ const PvPGame: React.FC = () => {
           <span className="balance-value-small">{balance.ton.toFixed(1)} TON</span>
         </div>
         <div 
-          className={`balance-item-small ${selectedCurrency === 'usdt' ? 'active-currency' : ''}`}
-          onClick={() => setSelectedCurrency('usdt')}
+          className={`balance-item-small ${selectedCurrency === 'stars' ? 'active-currency' : ''}`}
+          onClick={() => setSelectedCurrency('stars')}
         >
-          <img src="/ustd.png" alt="USDT" className="balance-icon-small" />
-          <span className="balance-value-small">{balance.usdt.toFixed(1)} USDT</span>
+          <img src="/stars.png" alt="Stars" className="balance-icon-small" />
+          <span className="balance-value-small">{balance.stars.toFixed(0)} ⭐</span>
         </div>
         <button 
           className="deposit-nav-button"
@@ -148,10 +143,10 @@ const PvPGame: React.FC = () => {
               💎 TON
             </button>
             <button
-              className={`currency-btn ${selectedCurrency === 'usdt' ? 'active' : ''}`}
-              onClick={() => setSelectedCurrency('usdt')}
+              className={`currency-btn ${selectedCurrency === 'stars' ? 'active' : ''}`}
+              onClick={() => setSelectedCurrency('stars')}
             >
-              💵 USDT
+              ⭐ Stars
             </button>
           </div>
 
@@ -194,7 +189,7 @@ const PvPGame: React.FC = () => {
             onClick={handlePlaceBet}
             disabled={betAmount > maxBet || betAmount <= 0}
           >
-            🎯 Place Bet ({betAmount} {selectedCurrency.toUpperCase()})
+            🎯 Place Bet ({betAmount} {selectedCurrency === 'ton' ? 'TON' : '⭐'})
           </button>
           <p className="color-auto-text">
             You can place multiple bets • Color assigned automatically
@@ -264,7 +259,6 @@ const PvPGame: React.FC = () => {
         )}
       </div>
 
-      {/* Модальное окно депозита */}
       <DepositModal
         isOpen={isDepositOpen}
         onClose={() => setIsDepositOpen(false)}

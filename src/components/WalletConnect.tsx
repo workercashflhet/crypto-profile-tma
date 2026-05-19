@@ -1,19 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   useTonConnectUI,
   useTonWallet,
   TonConnectButton,
 } from '@tonconnect/ui-react';
 import { useWalletBalance } from '../hooks/useWalletBalance';
-import { formatAddress } from '../utils/addressUtils';
 import './WalletConnect.css';
 
 const WalletConnect: React.FC = () => {
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const balances = useWalletBalance();
-  const [showFullAddress, setShowFullAddress] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   if (!wallet) {
     return (
@@ -26,25 +23,7 @@ const WalletConnect: React.FC = () => {
     );
   }
 
-  // Конвертируем в non-bounceable формат (UQ...)
-  const rawAddress = wallet.account.address;
-  const friendlyAddress = formatAddress(rawAddress);
-  
-  // Форматированный адрес для отображения
-  const displayAddress = showFullAddress 
-    ? friendlyAddress 
-    : `${friendlyAddress.slice(0, 8)}...${friendlyAddress.slice(-8)}`;
-
-  // Копирование адреса
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(friendlyAddress);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
+  const shortAddress = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-6)}`;
 
   return (
     <div className="wallet-container">
@@ -52,44 +31,20 @@ const WalletConnect: React.FC = () => {
         <div className="wallet-header">
           <div className="wallet-status-indicator" />
           <span className="wallet-status-text">Connected</span>
-          <span className="wallet-chain-badge">
-            {wallet.account.chain === '-239' ? 'Mainnet' : 'Testnet'}
-          </span>
         </div>
         
         <div className="wallet-address-section">
-          <div className="wallet-label">Wallet Address</div>
-          <div className="wallet-address-wrapper">
-            <div 
-              className="wallet-address-full" 
-              title={friendlyAddress}
-              onClick={() => setShowFullAddress(!showFullAddress)}
-            >
-              {displayAddress}
-            </div>
-            <div className="wallet-actions">
-              <button 
-                onClick={() => setShowFullAddress(!showFullAddress)}
-                className="address-toggle-button"
-                title={showFullAddress ? "Show short address" : "Show full address"}
-              >
-                {showFullAddress ? '👁️' : '👁️‍🗨️'}
-              </button>
-              <button 
-                onClick={handleCopy}
-                className="copy-button"
-                title="Copy address"
-              >
-                {copied ? '✅' : '📋'}
-              </button>
-            </div>
-          </div>
-          {copied && (
-            <div className="copied-notification">Address copied!</div>
-          )}
+          <div className="wallet-label">Address</div>
+          <div className="wallet-address">{shortAddress}</div>
+          <button 
+            onClick={() => navigator.clipboard.writeText(wallet.account.address)}
+            className="copy-button"
+            title="Copy address"
+          >
+            📋
+          </button>
         </div>
 
-        {/* Балансы */}
         <div className="balances-container">
           <h3 className="balances-title">Wallet Balances</h3>
           
@@ -108,10 +63,7 @@ const WalletConnect: React.FC = () => {
                   {balances.isLoading ? (
                     <span className="balance-loading">...</span>
                   ) : (
-                    <>
-                      {balances.ton.toFixed(4)}
-                      <span className="balance-symbol"> TON</span>
-                    </>
+                    <>{balances.ton.toFixed(4)} TON</>
                   )}
                 </div>
               </div>
@@ -119,19 +71,12 @@ const WalletConnect: React.FC = () => {
             
             <div className="balance-item">
               <div className="balance-icon">
-                <img src="/ustd.png" alt="USDT" className="token-icon" />
+                <img src="/stars.png" alt="Stars" className="token-icon" />
               </div>
               <div className="balance-info">
-                <div className="balance-label">USDT</div>
+                <div className="balance-label">Stars</div>
                 <div className="balance-value">
-                  {balances.isLoading ? (
-                    <span className="balance-loading">...</span>
-                  ) : (
-                    <>
-                      {balances.usdt.toFixed(2)}
-                      <span className="balance-symbol"> USDT</span>
-                    </>
-                  )}
+                  <>{balances.stars.toFixed(0)} ⭐</>
                 </div>
               </div>
             </div>
