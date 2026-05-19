@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { CurrencyType } from '../types/pvp';
-import { OWNER_WALLET, createTonTransfer, createStarsInvoice } from '../services/tonService';
+import { createTonTransfer } from '../services/tonService';
 import './DepositModal.css';
 
 interface DepositModalProps {
@@ -54,18 +54,17 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
             },
           ],
         });
+        setStep('success');
+        onDepositSuccess(numAmount, currency);
+        setTimeout(() => onClose(), 3000);
       } else {
         // Telegram Stars - открываем инвойс
-        const invoice = createStarsInvoice(numAmount);
-        
         // @ts-ignore
         const tg = window.Telegram?.WebApp;
         
         if (tg?.openInvoice) {
           tg.openInvoice(
-            `https://t.me/${
-              tg.initDataUnsafe?.user?.username || 'stars'
-            }?star_count=${numAmount}`,
+            `https://t.me/stars?star_count=${numAmount}`,
             (status: string) => {
               if (status === 'paid') {
                 setStep('success');
@@ -78,18 +77,12 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
             }
           );
         } else {
-          // Fallback: открываем ссылку в браузере
           window.open(`https://t.me/stars?amount=${numAmount}`, '_blank');
           setStep('success');
           onDepositSuccess(numAmount, currency);
           setTimeout(() => onClose(), 3000);
         }
-        return;
       }
-
-      setStep('success');
-      onDepositSuccess(numAmount, currency);
-      setTimeout(() => onClose(), 3000);
     } catch (err: any) {
       console.error('Deposit error:', err);
       setError(err?.message || 'Transaction failed');

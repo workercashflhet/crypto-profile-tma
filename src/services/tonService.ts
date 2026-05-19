@@ -1,5 +1,4 @@
 import { Address, toNano } from '@ton/ton';
-import { beginCell } from '@ton/core';
 import axios from 'axios';
 
 const TON_API_ENDPOINT = 'https://tonapi.io/v2';
@@ -23,7 +22,7 @@ export const createTonTransfer = (amount: number): { to: string; value: string }
   };
 };
 
-export const createStarsInvoice = (amount: number): { title: string; description: string; payload: string; currency: string; amount: number } => {
+export const createStarsInvoice = (amount: number) => {
   return {
     title: 'Deposit Stars',
     description: `Deposit ${amount} Telegram Stars to game balance`,

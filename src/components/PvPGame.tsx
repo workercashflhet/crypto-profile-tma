@@ -21,7 +21,6 @@ const PvPGame: React.FC = () => {
     calculateSegments,
     placeBet,
     spinWheel,
-    resetRound,
     getTotalPool,
   } = usePvPGame();
 
