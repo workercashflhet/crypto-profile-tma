@@ -6,9 +6,7 @@ interface GameBalance {
   usdt: number;
 }
 
-const STORAGE_KEY = 'game_balance_v3'; // Новая версия для сброса
-
-// Флаг для принудительного пополнения
+const STORAGE_KEY = 'game_balance_v3';
 const REFILL_AMOUNT = {
   ton: 1000,
   usdt: 1000,
@@ -19,6 +17,7 @@ export const useGameBalance = () => {
   const [balance, setBalance] = useState<GameBalance>({ ton: 0, usdt: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Загрузка баланса
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -32,9 +31,7 @@ export const useGameBalance = () => {
       if (stored) {
         const parsed = JSON.parse(stored);
         
-        // Проверяем, было ли пополнение в этой версии
         if (!refilled) {
-          // Пополняем баланс
           const newBalance = {
             ton: (parsed.ton || 0) + REFILL_AMOUNT.ton,
             usdt: (parsed.usdt || 0) + REFILL_AMOUNT.usdt,
@@ -49,10 +46,9 @@ export const useGameBalance = () => {
           });
         }
       } else {
-        // Новый пользователь - стартовый бонус
         const initialBalance: GameBalance = {
-          ton: 1000,
-          usdt: 1000,
+          ton: 2000,
+          usdt: 2000,
         };
         localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(initialBalance));
         localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
@@ -60,7 +56,7 @@ export const useGameBalance = () => {
       }
     } catch (error) {
       console.error('Error loading game balance:', error);
-      const defaultBalance: GameBalance = { ton: 1000, usdt: 1000 };
+      const defaultBalance: GameBalance = { ton: 2000, usdt: 2000 };
       setBalance(defaultBalance);
       localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(defaultBalance));
       localStorage.setItem(`${STORAGE_KEY}_refilled_${user.id}`, 'true');
@@ -69,54 +65,61 @@ export const useGameBalance = () => {
     }
   }, [user]);
 
+  // Сохранение баланса
   const saveBalance = useCallback((newBalance: GameBalance) => {
     if (!user) return;
     localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
     setBalance(newBalance);
   }, [user]);
 
+  // Пополнение TON - вызывается из DepositModal после успешной транзакции
   const depositTon = useCallback((amount: number) => {
+    if (!user) return;
+    
     setBalance(prev => {
       const newBalance = { ...prev, ton: prev.ton + amount };
-      if (user) {
-        localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-      }
+      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
+      console.log(`✅ Deposited ${amount} TON. New balance: ${newBalance.ton} TON`);
       return newBalance;
     });
   }, [user]);
 
+  // Пополнение USDT
   const depositUsdt = useCallback((amount: number) => {
+    if (!user) return;
+    
     setBalance(prev => {
       const newBalance = { ...prev, usdt: prev.usdt + amount };
-      if (user) {
-        localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-      }
+      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
+      console.log(`✅ Deposited ${amount} USDT. New balance: ${newBalance.usdt} USDT`);
       return newBalance;
     });
   }, [user]);
 
+  // Списание TON
   const withdrawTon = useCallback((amount: number): boolean => {
+    if (!user) return false;
+    
     let success = false;
     setBalance(prev => {
       if (prev.ton < amount) return prev;
       const newBalance = { ...prev, ton: prev.ton - amount };
-      if (user) {
-        localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-      }
+      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
       success = true;
       return newBalance;
     });
     return success;
   }, [user]);
 
+  // Списание USDT
   const withdrawUsdt = useCallback((amount: number): boolean => {
+    if (!user) return false;
+    
     let success = false;
     setBalance(prev => {
       if (prev.usdt < amount) return prev;
       const newBalance = { ...prev, usdt: prev.usdt - amount };
-      if (user) {
-        localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
-      }
+      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(newBalance));
       success = true;
       return newBalance;
     });

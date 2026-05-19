@@ -22,6 +22,8 @@ const PvPGame: React.FC = () => {
     placeBet,
     spinWheel,
     getTotalPool,
+    depositTon,
+    depositUsdt,
   } = usePvPGame();
 
   const segments = calculateSegments();
@@ -44,9 +46,11 @@ const PvPGame: React.FC = () => {
   };
 
   const handleDeposit = (amount: number, currency: CurrencyType) => {
-    // Здесь будет логика пополнения через TON кошелек
-    console.log(`Deposit ${amount} ${currency}`);
-    // После успешной транзакции баланс обновится автоматически
+    if (currency === 'ton') {
+      depositTon(amount);
+    } else {
+      depositUsdt(amount);
+    }
   };
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.usdt;
