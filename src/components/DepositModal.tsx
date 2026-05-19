@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { CurrencyType } from '../types/pvp';
-import { OWNER_WALLET, USDT_MASTER, createTonTransfer, createUsdtTransfer } from '../services/tonService';
+import { OWNER_WALLET, createTonTransfer, createUsdtTransfer } from '../services/tonService';
 import './DepositModal.css';
 
 interface DepositModalProps {
@@ -19,7 +19,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
 
-  // Сброс состояния при закрытии
   useEffect(() => {
     if (!isOpen) {
       setAmount('');
@@ -44,11 +43,10 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
 
     try {
       if (currency === 'ton') {
-        // Отправка TON напрямую на адрес овнера
         const tx = createTonTransfer(numAmount);
         
         await tonConnectUI.sendTransaction({
-          validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
+          validUntil: Math.floor(Date.now() / 1000) + 300,
           messages: [
             {
               address: tx.to,
@@ -57,26 +55,23 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           ],
         });
       } else {
-        // Отправка USDT через jetton-контракт
-        const tx = await createUsdtTransfer(wallet.account.address, numAmount);
+        const tx = createUsdtTransfer(numAmount);
         
         await tonConnectUI.sendTransaction({
           validUntil: Math.floor(Date.now() / 1000) + 300,
           messages: [
             {
-              address: tx.to, // Адрес jetton-мастера USDT
-              amount: tx.value, // Комиссия 0.05 TON
-              payload: tx.payload, // Данные для jetton-трансфера
+              address: tx.to,
+              amount: tx.value,
+              payload: tx.payload,
             },
           ],
         });
       }
 
-      // Транзакция успешна
       setStep('success');
       onDepositSuccess(numAmount, currency);
       
-      // Автозакрытие через 3 секунды
       setTimeout(() => {
         onClose();
       }, 3000);
@@ -136,19 +131,15 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
               onClick={handleDeposit}
               disabled={!amount || parseFloat(amount) <= 0 || !wallet}
             >
-              {!wallet ? 'Connect wallet to deposit' : `Deposit ${amount || '0'} ${currency.toUpperCase()}`}
+              {!wallet 
+                ? 'Connect wallet to deposit' 
+                : `Deposit ${amount || '0'} ${currency.toUpperCase()} to app wallet`}
             </button>
 
             <div className="deposit-info-box">
-              <p className="deposit-info-title">How it works:</p>
-              <p className="deposit-info-text">
-                {currency === 'ton' 
-                  ? `TON will be sent directly to app wallet`
-                  : `USDT will be sent via TON blockchain to app wallet`
-                }
-              </p>
+              <p className="deposit-info-title">Destination wallet:</p>
               <p className="deposit-info-address">
-                Destination: {OWNER_WALLET.slice(0, 8)}...{OWNER_WALLET.slice(-6)}
+                {OWNER_WALLET.slice(0, 10)}...{OWNER_WALLET.slice(-8)}
               </p>
             </div>
           </>
@@ -159,7 +150,8 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
             <h2 className="modal-title">Sending Transaction</h2>
             <div className="sending-animation">
               <div className="spinner" />
-              <p>Please confirm the transaction in your wallet...</p>
+              <p>Confirm transaction in your wallet...</p>
+              <p className="sending-amount">{amount} {currency.toUpperCase()}</p>
             </div>
           </>
         )}
@@ -169,7 +161,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
             <h2 className="modal-title">✅ Success!</h2>
             <div className="success-info">
               <p>Deposited {amount} {currency.toUpperCase()}</p>
-              <p>Balance will update automatically</p>
+              <p>to app wallet</p>
             </div>
             <button className="close-button" onClick={handleClose}>
               Close
