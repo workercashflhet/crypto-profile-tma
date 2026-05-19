@@ -42,36 +42,40 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           messages: [
             {
               address: OWNER_WALLET,
-              amount: (numAmount * 1_000_000_000).toString(), // Конвертируем TON в наноTON
+              amount: (numAmount * 1_000_000_000).toString(),
             },
           ],
         });
+
+        setStep('success');
+        onDepositSuccess(numAmount, 'ton');
+        setTimeout(() => onClose(), 3000);
       } else {
         // Депозит через Telegram Stars
         // @ts-ignore
         const tg = window.Telegram?.WebApp;
-        
+
         if (!tg) {
           setError('Telegram WebApp not available');
           setStep('input');
           return;
         }
 
-        // Отправляем инвойс
-        tg.openInvoice({
-          title: `Deposit ${numAmount} Stars`,
-          description: `Add ${numAmount} Stars to your game balance`,
-          payload: JSON.stringify({
-            type: 'deposit',
-            currency: 'stars',
-            amount: numAmount,
-          }),
-          currency: 'XTR',
-          prices: [{ 
-            label: `${numAmount} Stars`, 
-            amount: Math.floor(numAmount) 
-          }],
-        }, (status: string) => {
+        // Отправляем запрос на создание инвойса
+        const response = await fetch('/api/create-invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: Math.floor(numAmount) }),
+        });
+
+        const data = await response.json();
+
+        if (!data.success || !data.invoiceLink) {
+          throw new Error(data.error || 'Failed to create invoice');
+        }
+
+        // Открываем инвойс по ссылке
+        tg.openInvoice(data.invoiceLink, (status: string) => {
           if (status === 'paid') {
             setStep('success');
             onDepositSuccess(numAmount, 'stars');
@@ -86,10 +90,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
         });
         return;
       }
-
-      setStep('success');
-      onDepositSuccess(numAmount, 'ton');
-      setTimeout(() => onClose(), 3000);
     } catch (err: any) {
       console.error('Deposit error:', err);
       setError(err?.message || 'Transaction failed');
@@ -110,8 +110,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
         {step === 'input' && (
           <>
             <h2 className="modal-title">Deposit Funds</h2>
-            
-            {/* Выбор валюты */}
+
             <div className="currency-toggle">
               <button
                 className={`currency-btn ${currency === 'ton' ? 'active' : ''}`}
@@ -153,8 +152,8 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
               onClick={handleDeposit}
               disabled={!amount || numAmount <= 0 || (currency === 'ton' && !wallet)}
             >
-              {currency === 'ton' && !wallet 
-                ? 'Connect wallet in Profile' 
+              {currency === 'ton' && !wallet
+                ? 'Connect wallet in Profile'
                 : currency === 'ton'
                   ? `Send ${amount} TON via wallet`
                   : `Pay ${amount || '0'} ⭐ Stars`
@@ -172,13 +171,13 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
         {step === 'sending' && (
           <>
             <h2 className="modal-title">
-              {currency === 'ton' ? 'Confirm in Wallet' : 'Open Invoice'}
+              {currency === 'ton' ? 'Confirm in Wallet' : 'Opening Invoice...'}
             </h2>
             <div className="sending-animation">
               <div className="spinner" />
               <p>
-                {currency === 'ton' 
-                  ? 'Please confirm the transaction in your TON wallet...' 
+                {currency === 'ton'
+                  ? 'Please confirm the transaction in your TON wallet...'
                   : 'Please complete the payment in Telegram...'
                 }
               </p>
