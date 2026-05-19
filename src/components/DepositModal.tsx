@@ -30,7 +30,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
 
     try {
       if (currency === 'ton') {
-        // Депозит через TON кошелек
         if (!wallet) {
           setError('Please connect your wallet first');
           setStep('input');
@@ -51,7 +50,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
         onDepositSuccess(numAmount, 'ton');
         setTimeout(() => onClose(), 3000);
       } else {
-        // Депозит через Telegram Stars
         // @ts-ignore
         const tg = window.Telegram?.WebApp;
 
@@ -61,7 +59,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           return;
         }
 
-        // Отправляем запрос на создание инвойса
         const response = await fetch('/api/create-invoice', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -74,7 +71,6 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           throw new Error(data.error || 'Failed to create invoice');
         }
 
-        // Открываем инвойс по ссылке
         tg.openInvoice(data.invoiceLink, (status: string) => {
           if (status === 'paid') {
             setStep('success');
@@ -116,18 +112,20 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
                 className={`currency-btn ${currency === 'ton' ? 'active' : ''}`}
                 onClick={() => setCurrency('ton')}
               >
-                💎 TON
+                <img src="/ton.png" alt="TON" className="currency-icon" />
+                TON
               </button>
               <button
                 className={`currency-btn ${currency === 'stars' ? 'active' : ''}`}
                 onClick={() => setCurrency('stars')}
               >
-                ⭐ Stars
+                <img src="/stars.png" alt="Stars" className="currency-icon" />
+                Stars
               </button>
             </div>
 
             <div className="deposit-balance">
-              Your balance: {currency === 'ton' ? `${balance.ton.toFixed(1)} TON` : `${balance.stars.toFixed(0)} ⭐`}
+              Your balance: {currency === 'ton' ? `${balance.ton.toFixed(1)} TON` : `${balance.stars.toFixed(0)} Stars`}
             </div>
 
             <input
@@ -156,7 +154,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
                 ? 'Connect wallet in Profile'
                 : currency === 'ton'
                   ? `Send ${amount} TON via wallet`
-                  : `Pay ${amount || '0'} ⭐ Stars`
+                  : `Pay ${amount || '0'} Stars`
               }
             </button>
 
@@ -189,7 +187,7 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onDepositS
           <>
             <h2 className="modal-title">✅ Success!</h2>
             <div className="success-info">
-              <p>Deposited {amount} {currency === 'ton' ? 'TON' : '⭐'}</p>
+              <p>Deposited {amount} {currency === 'ton' ? 'TON' : 'Stars'}</p>
               <p>Your balance has been updated</p>
             </div>
             <button className="close-button" onClick={handleClose}>
