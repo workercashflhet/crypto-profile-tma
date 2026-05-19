@@ -21,6 +21,7 @@ const PvPGame: React.FC = () => {
     calculateSegments,
     placeBet,
     spinWheel,
+    resetRound,
     getTotalPool,
   } = usePvPGame();
 
@@ -44,7 +45,6 @@ const PvPGame: React.FC = () => {
   };
 
   const handleDeposit = (amount: number, currency: 'ton' | 'stars') => {
-    // Баланс обновляется через useGameBalance
     console.log(`Deposit successful: ${amount} ${currency}`);
   };
 
@@ -59,7 +59,7 @@ const PvPGame: React.FC = () => {
     
     const parts: string[] = [];
     if (tonTotal > 0) parts.push(`${tonTotal} TON`);
-    if (starsTotal > 0) parts.push(`${starsTotal} ⭐`);
+    if (starsTotal > 0) parts.push(`${starsTotal} Stars`);
     
     return parts.join(' + ');
   };
@@ -75,6 +75,7 @@ const PvPGame: React.FC = () => {
 
   return (
     <div className="pvp-game">
+      {/* Баланс и кнопка депозита */}
       <div className="player-balance-bar">
         <div 
           className={`balance-item-small ${selectedCurrency === 'ton' ? 'active-currency' : ''}`}
@@ -87,7 +88,7 @@ const PvPGame: React.FC = () => {
           className={`balance-item-small ${selectedCurrency === 'stars' ? 'active-currency' : ''}`}
           onClick={() => setSelectedCurrency('stars')}
         >
-          <span className="balance-icon-small">⭐</span>
+          <img src="/stars.png" alt="Stars" className="balance-icon-small" />
           <span className="balance-value-small">{balance.stars.toFixed(0)} Stars</span>
         </div>
         <button className="deposit-nav-button" onClick={() => setIsDepositOpen(true)}>
@@ -95,10 +96,13 @@ const PvPGame: React.FC = () => {
         </button>
       </div>
 
+      {/* Мои ставки */}
       {playerBets.length > 0 && (
         <div className="my-bets-bar">
           <span>My bets: {formatPlayerBets({ bets: playerBets })}</span>
-          <span className="bets-count">{calculateWinChance({ totalBet: myTotalBet })}%</span>
+          <span className="bets-count">
+            {calculateWinChance({ totalBet: myTotalBet })}%
+          </span>
         </div>
       )}
 
@@ -133,13 +137,15 @@ const PvPGame: React.FC = () => {
               className={`currency-btn ${selectedCurrency === 'ton' ? 'active' : ''}`}
               onClick={() => setSelectedCurrency('ton')}
             >
-              💎 TON
+              <img src="/ton.png" alt="TON" className="currency-icon" />
+              TON
             </button>
             <button
               className={`currency-btn ${selectedCurrency === 'stars' ? 'active' : ''}`}
               onClick={() => setSelectedCurrency('stars')}
             >
-              ⭐ Stars
+              <img src="/stars.png" alt="Stars" className="currency-icon" />
+              Stars
             </button>
           </div>
 
@@ -169,14 +175,16 @@ const PvPGame: React.FC = () => {
             onClick={handlePlaceBet}
             disabled={betAmount > maxBet || betAmount <= 0}
           >
-            🎯 Place Bet ({betAmount} {selectedCurrency === 'ton' ? 'TON' : '⭐'})
+            Place Bet ({betAmount} {selectedCurrency === 'ton' ? 'TON' : 'Stars'})
           </button>
           <p className="color-auto-text">You can place multiple bets • Color assigned automatically</p>
         </div>
       )}
 
       {currentRound?.status === 'spinning' && (
-        <div className="spinning-status"><div className="spinning-text">🎰 Spinning...</div></div>
+        <div className="spinning-status">
+          <div className="spinning-text">Spinning...</div>
+        </div>
       )}
 
       {winner && (
@@ -186,9 +194,12 @@ const PvPGame: React.FC = () => {
             className="winner-avatar"
             onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${winner.userId}`; }}
           />
-          <div className="winner-crown">👑</div>
-          <div className="winner-announcement">{winner.firstName} wins!</div>
-          <div className="winner-prize">{getTotalPool()}</div>
+          <div className="winner-announcement">
+            👑 {winner.firstName} wins!
+          </div>
+          <div className="winner-prize">
+            {getTotalPool()}
+          </div>
         </div>
       )}
 
@@ -203,17 +214,25 @@ const PvPGame: React.FC = () => {
               onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${player.userId}`; }}
             />
             <div className="player-info">
-              <span className="player-name">{player.firstName}{winner?.userId === player.userId && ' 👑'}</span>
+              <span className="player-name">
+                {player.firstName}
+                {winner?.userId === player.userId && ' 👑'}
+              </span>
               <span className="player-username">@{player.username}</span>
             </div>
             <div className="player-stats">
               <span className="player-bet">{formatPlayerBets(player)}</span>
-              <span className="player-share">{calculateWinChance(player)}%</span>
+              <span className="player-share">
+                {calculateWinChance(player)}%
+              </span>
             </div>
           </div>
         ))}
         {(!currentRound?.players || currentRound.players.length === 0) && (
-          <div className="no-players"><p>No players yet</p><p className="no-players-sub">Be the first to join!</p></div>
+          <div className="no-players">
+            <p>No players yet</p>
+            <p className="no-players-sub">Be the first to join!</p>
+          </div>
         )}
       </div>
 
