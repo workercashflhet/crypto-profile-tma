@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,7 +19,7 @@
   width: 100%;
   max-width: 400px;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-title {
@@ -39,11 +39,6 @@
   color: rgba(255, 255, 255, 0.5);
   font-size: 20px;
   cursor: pointer;
-  padding: 4px 8px;
-}
-
-.modal-close:hover {
-  color: white;
 }
 
 .currency-toggle {
@@ -56,10 +51,10 @@
   flex: 1;
   padding: 12px;
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.05);
-  color: white;
-  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -68,6 +63,7 @@
 .currency-btn.active {
   border-color: #667eea;
   background: rgba(102, 126, 234, 0.2);
+  color: white;
 }
 
 .deposit-balance {
@@ -81,39 +77,13 @@
   width: 100%;
   padding: 14px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   color: white;
-  font-size: 20px;
+  font-size: 18px;
   text-align: center;
   margin-bottom: 16px;
-  outline: none;
   box-sizing: border-box;
-}
-
-.deposit-input:focus {
-  border-color: #667eea;
-}
-
-.deposit-info-box {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 16px;
-}
-
-.deposit-info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.deposit-info-row code {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 .deposit-button {
@@ -127,7 +97,6 @@
   font-weight: 600;
   cursor: pointer;
   margin-bottom: 12px;
-  transition: opacity 0.2s;
 }
 
 .deposit-button:disabled {
@@ -135,58 +104,11 @@
   cursor: not-allowed;
 }
 
-.deposit-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.deposit-warning {
+.deposit-info-text {
   text-align: center;
-  color: #ff9500;
-  font-size: 13px;
-  margin-top: 8px;
-}
-
-/* Processing */
-.processing-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
-  border-radius: 50%;
-  margin: 0 auto 20px;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.processing-text {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-}
-
-.processing-amount {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: white;
-  margin-top: 12px;
-}
-
-/* Success */
-.success-icon {
-  font-size: 48px;
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.success-text {
-  text-align: center;
-  color: #30d158;
-  font-size: 16px;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  margin-bottom: 8px;
 }
 
 .deposit-error {
@@ -197,33 +119,6 @@
   text-align: center;
   font-size: 13px;
   margin-bottom: 12px;
-}
-
-.deposit-info-box {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  padding: 12px;
-  margin-top: 16px;
-}
-
-.deposit-info-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 4px;
-}
-
-.deposit-info-text {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 4px 0;
-}
-
-.deposit-info-address {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: monospace;
-  margin-top: 8px;
 }
 
 .sending-animation {
@@ -245,6 +140,11 @@
   to { transform: rotate(360deg); }
 }
 
+.sending-animation p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
 .success-info {
   text-align: center;
   padding: 20px;
@@ -256,66 +156,13 @@
   font-size: 16px;
 }
 
-.payment-method-toggle {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.method-btn {
-  flex: 1;
-  padding: 10px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.method-btn.active {
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.2);
-  color: white;
-}
-
-.stars-info {
-  background: rgba(255, 215, 0, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 10px;
+.close-button {
+  width: 100%;
   padding: 12px;
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.stars-info p {
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  margin: 4px 0;
-}
-
-.stars-rate {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.wallet-info-box {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.wallet-info-title {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 4px;
-}
-
-.wallet-info-address {
-  font-size: 13px;
-  font-family: monospace;
-  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
 }
