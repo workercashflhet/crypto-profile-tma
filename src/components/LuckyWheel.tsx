@@ -18,7 +18,7 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ segments, rotationAngle, isSpin
           <div className="wheel-pointer">▼</div>
           <div className="wheel-center-solid">
             <svg className="timer-circle-svg" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="#1a1a2e" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
+              <circle cx="50" cy="50" r="45" fill="#000000" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
             </svg>
             <div className="timer-text-waiting">Ожидание<br/>игроков</div>
           </div>

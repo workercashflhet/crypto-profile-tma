@@ -16,7 +16,6 @@
   height: 100%;
   border-radius: 50%;
   position: relative;
-  /* БЕЗ ОБОДКА */
   border: none;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
 }
@@ -25,18 +24,18 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border: none;
 }
 
-/* Центр колеса с таймером */
+/* Центр колеса с таймером - ЧЕРНЫЙ ФОН, ШИРЕ НА 10px */
 .wheel-center-solid {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   z-index: 5;
 }
 
@@ -71,7 +70,7 @@
   text-align: center;
   line-height: 1.4;
   z-index: 1;
-  width: 70px;
+  width: 80px;
 }
 
 .time-warning {
@@ -90,7 +89,7 @@
   z-index: 10;
 }
 
-/* Аватарки СТРОГО ПО ЦЕНТРУ ОБЛАСТИ ИГРОКА */
+/* Аватарки 32px */
 .wheel-avatar-container {
   position: absolute;
   top: 50%;
@@ -103,7 +102,6 @@
 
 .avatar-position {
   position: absolute;
-  /* Центр радиуса колеса = 160px, размещаем на 60% радиуса */
   transform: translate(-50%, -50%) translateY(-96px);
 }
 
@@ -118,7 +116,6 @@
   display: block;
 }
 
-/* Спиннинг */
 .spinning {
   animation: wheelGlow 0.5s ease-in-out infinite alternate;
 }

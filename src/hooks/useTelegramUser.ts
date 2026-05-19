@@ -81,7 +81,7 @@ export const useTelegramUser = (): {
           const lastName = tgUser.lastName ? String(tgUser.lastName) : undefined;
           
           // Если имя пустое, используем username или "User"
-          const displayName = firstName || tgUser.username || 'User';
+          const displayName = firstName || '';
           
           let photoUrl: string | undefined;
           
