@@ -11,10 +11,10 @@ export interface TelegramUser {
 }
 
 const MOCK_USER: TelegramUser = {
-  id: 123456789,
-  firstName: 'John',
-  lastName: 'Doe',
-  username: 'johndoe',
+  id: 479243932, // ВРЕМЕННО: установлен ID админа для теста
+  firstName: 'Admin',
+  lastName: 'Test',
+  username: 'admin',
   photoUrl: undefined,
   isPremium: true,
 };
@@ -72,11 +72,18 @@ export const useTelegramUser = (): {
       try {
         const launchParams = retrieveLaunchParams();
         
+        console.log('Launch params:', launchParams);
+        
         if (launchParams.tgWebAppData?.user) {
           const tgUser = launchParams.tgWebAppData.user;
+          
+          // ВАЖНО: убедитесь, что id - это число
           const userId = Number(tgUser.id);
           
-          // ПРАВИЛЬНОЕ ИМЯ ИЗ TELEGRAM
+          console.log('Raw tgUser:', tgUser);
+          console.log('User ID (number):', userId);
+          console.log('Is admin check (479243932)?', userId === 479243932);
+          
           const firstName = String(tgUser.firstName || '');
           const lastName = tgUser.lastName ? String(tgUser.lastName) : undefined;
           
@@ -98,16 +105,21 @@ export const useTelegramUser = (): {
             isPremium: Boolean(tgUser.isPremium),
           };
           
+          console.log('Created userData:', userData);
+          console.log('Final admin check:', userData.id === 479243932);
+          
           setUser(userData);
           
           if (!photoUrl) {
             setTimeout(() => loadUserPhoto(), 500);
           }
         } else {
+          console.log('No tgWebAppData.user found, using mock admin user');
           setUser(MOCK_USER);
         }
       } catch (error) {
         console.error('Failed to retrieve launch params:', error);
+        console.log('Using mock admin user due to error');
         setUser(MOCK_USER);
       } finally {
         setIsLoading(false);
