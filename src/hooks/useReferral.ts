@@ -3,7 +3,7 @@ import { useTelegramUser } from './useTelegramUser';
 import { ReferralData, ReferralUser, ReferralStats } from '../types/referral';
 
 const REFERRAL_STORAGE_KEY = 'referral_data_v1';
-const REFERRAL_CODE_PREFIX = 'CRYPTO';
+const REFERRAL_CODE_PREFIX = 'ref';
 const REFERRAL_LEVELS = [10, 5, 2]; // 10%, 5%, 2% для трех уровней
 
 export const useReferral = () => {
@@ -13,11 +13,47 @@ export const useReferral = () => {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralLink, setReferralLink] = useState<string>('');
 
-  // Генерация уникального реферального кода
+  // Генерация уникального реферального кода в формате refXXXXXXXX
   const generateReferralCode = useCallback((userId: number): string => {
-    const hash = Math.abs(userId * 2654435761) % 1000000;
-    return `${REFERRAL_CODE_PREFIX}${hash}`;
+    // Создаем хеш из userId и текущего времени для уникальности
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const userIdHash = userId.toString(36).toUpperCase();
+    // Берем первые 7 символов от объединенной строки
+    const combined = (userIdHash + timestamp).slice(0, 7);
+    return `${REFERRAL_CODE_PREFIX}${combined}`;
   }, []);
+
+  // Проверка уникальности кода
+  const isCodeUnique = useCallback((code: string): boolean => {
+    const allKeys = Object.keys(localStorage);
+    for (const key of allKeys) {
+      if (key.startsWith(REFERRAL_STORAGE_KEY)) {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const data = JSON.parse(stored);
+          if (data.referralCode === code) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }, []);
+
+  // Генерация уникального кода с проверкой
+  const generateUniqueCode = useCallback((userId: number): string => {
+    let code = generateReferralCode(userId);
+    let counter = 0;
+    
+    // Если код уже существует, добавляем случайные символы
+    while (!isCodeUnique(code) && counter < 10) {
+      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+      code = `${REFERRAL_CODE_PREFIX}${randomPart}`;
+      counter++;
+    }
+    
+    return code;
+  }, [generateReferralCode, isCodeUnique]);
 
   // Загрузка реферальных данных
   const loadReferralData = useCallback(() => {
@@ -36,10 +72,12 @@ export const useReferral = () => {
           }))
         });
       } else {
-        // Создаем новые реферальные данные
+        // Создаем уникальный реферальный код
+        const uniqueCode = generateUniqueCode(user.id);
+        
         const newReferralData: ReferralData = {
           userId: user.id,
-          referralCode: generateReferralCode(user.id),
+          referralCode: uniqueCode,
           referrerId: null,
           referrals: [],
           totalEarnedTon: 0,
@@ -52,7 +90,7 @@ export const useReferral = () => {
     } catch (error) {
       console.error('Error loading referral data:', error);
     }
-  }, [user, generateReferralCode]);
+  }, [user, generateUniqueCode]);
 
   // Регистрация реферала
   const registerReferral = useCallback((referralCode: string, newUserId: number, firstName: string, username?: string) => {
@@ -201,7 +239,8 @@ export const useReferral = () => {
   // Формирование реферальной ссылки
   const getReferralLink = useCallback(() => {
     if (!referralData) return '';
-    const botUsername = 'YOUR_BOT_USERNAME'; // Замените на username вашего бота
+    // Замените YOUR_BOT_USERNAME на username вашего бота
+    const botUsername = 'YOUR_BOT_USERNAME';
     return `https://t.me/${botUsername}?start=${referralData.referralCode}`;
   }, [referralData]);
 
