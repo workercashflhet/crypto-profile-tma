@@ -39,7 +39,7 @@ export const useAdmin = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Проверка是否是 администратор
+  // Проверка является ли пользователь администратором
   useEffect(() => {
     if (user) {
       setIsAdmin(user.id === ADMIN_ID);
@@ -240,15 +240,15 @@ export const useAdmin = () => {
   }, [isAdmin, loadAllUsers, loadAdminActions, loadSettings]);
 
   return {
-  isAdmin,
-  users,
-  actions,
-  settings,
-  setSettings,  // <-- ДОБАВИТЬ ЭТУ СТРОКУ
-  isLoading,
-  updateUserBalance,
-  saveSettings,
-  getStats,
-  loadAllUsers,
-};
+    isAdmin,
+    users,
+    actions,
+    settings,
+    setSettings,
+    isLoading,
+    updateUserBalance,
+    saveSettings,
+    getStats,
+    loadAllUsers,
+  };
 };
