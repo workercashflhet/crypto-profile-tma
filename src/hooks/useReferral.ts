@@ -240,7 +240,7 @@ export const useReferral = () => {
   const getReferralLink = useCallback(() => {
     if (!referralData) return '';
     // Замените YOUR_BOT_USERNAME на username вашего бота
-    const botUsername = 'YOUR_BOT_USERNAME';
+    const botUsername = 'itsrefinelifebot';
     return `https://t.me/${botUsername}?start=${referralData.referralCode}`;
   }, [referralData]);
 
