@@ -4,7 +4,6 @@ import { ReferralData, ReferralUser, ReferralStats } from '../types/referral';
 
 const REFERRAL_STORAGE_KEY = 'referral_data_v1';
 const REFERRAL_CODE_PREFIX = 'CRYPTO';
-const REFERRAL_REWARD_PERCENT = 10; // 10% от ставок реферала
 const REFERRAL_LEVELS = [10, 5, 2]; // 10%, 5%, 2% для трех уровней
 
 export const useReferral = () => {
@@ -55,7 +54,7 @@ export const useReferral = () => {
     }
   }, [user, generateReferralCode]);
 
-  // Сохранение реферальных данных
+  // Сохранение реферальных данных (используется внутри)
   const saveReferralData = useCallback((data: ReferralData) => {
     if (!user) return;
     localStorage.setItem(`${REFERRAL_STORAGE_KEY}_${user.id}`, JSON.stringify(data));
@@ -125,7 +124,6 @@ export const useReferral = () => {
     const userStored = localStorage.getItem(userKey);
     if (!userStored) return;
 
-    const userData = JSON.parse(userStored);
     let currentUserId = userId;
     let level = 0;
 
