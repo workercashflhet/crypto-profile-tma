@@ -23,7 +23,7 @@ const UserProfile: React.FC = () => {
     if (user && !user.photoUrl && !isLoading) {
       loadUserPhoto();
     }
-  }, [user?.id]);
+  }, [user, isLoading, loadUserPhoto]);
 
   useEffect(() => {
     if (referralData) {
@@ -146,7 +146,7 @@ const UserProfile: React.FC = () => {
         <div className="referral-code-section">
           <div className="referral-code-label">Your Referral Code</div>
           <div className="referral-code-wrapper">
-            <div className="referral-code">{referralCode}</div>
+            <div className="referral-code">{referralCode || 'Loading...'}</div>
             <button 
               className="referral-button secondary"
               onClick={() => copyToClipboard(referralCode)}
@@ -159,7 +159,7 @@ const UserProfile: React.FC = () => {
         <div className="referral-link-section">
           <div className="referral-link-label">Your Referral Link</div>
           <div className="referral-link-wrapper">
-            <div className="referral-link">{referralLink}</div>
+            <div className="referral-link">{referralLink || 'Loading...'}</div>
             <button 
               className="referral-button secondary"
               onClick={() => copyToClipboard(referralLink)}
