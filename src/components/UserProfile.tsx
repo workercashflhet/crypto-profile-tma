@@ -7,7 +7,7 @@ import './ReferralSystem.css';
 
 const UserProfile: React.FC = () => {
   const { user, isLoading, loadUserPhoto } = useTelegramUser();
-  const { referralCode, referralLink, getReferralStats, referralData } = useReferral();
+  const { referralLink, getReferralStats, referralData } = useReferral();
   const [avatarError, setAvatarError] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
@@ -132,30 +132,23 @@ const UserProfile: React.FC = () => {
             <div className="referral-stat-label">Earned TON</div>
           </div>
           <div className="referral-stat-card">
-            <div className="referral-stat-value">{referralStats.totalEarnedStars.toFixed(0)} ⭐</div>
+            <div className="referral-stat-value">
+              <img src="/stars.png" alt="Stars" style={{ width: '20px', height: '20px', verticalAlign: 'middle', marginRight: '4px' }} />
+              {referralStats.totalEarnedStars.toFixed(0)}
+            </div>
             <div className="referral-stat-label">Earned Stars</div>
           </div>
           <div className="referral-stat-card">
             <div className="referral-stat-value">
-              {referralStats.availableTon.toFixed(2)} TON + {referralStats.availableStars.toFixed(0)} ⭐
+              {referralStats.availableTon.toFixed(2)} TON +{' '}
+              <img src="/stars.png" alt="Stars" style={{ width: '18px', height: '18px', verticalAlign: 'middle', marginRight: '2px' }} />
+              {referralStats.availableStars.toFixed(0)}
             </div>
             <div className="referral-stat-label">Available to Claim</div>
           </div>
         </div>
 
-        <div className="referral-code-section">
-          <div className="referral-code-label">Your Referral Code</div>
-          <div className="referral-code-wrapper">
-            <div className="referral-code">{referralCode || 'Loading...'}</div>
-            <button 
-              className="referral-button secondary"
-              onClick={() => copyToClipboard(referralCode)}
-            >
-              📋 Copy
-            </button>
-          </div>
-        </div>
-
+        {/* Только реферальная ссылка, без кода */}
         <div className="referral-link-section">
           <div className="referral-link-label">Your Referral Link</div>
           <div className="referral-link-wrapper">
@@ -184,7 +177,10 @@ const UserProfile: React.FC = () => {
                 </div>
                 <div className="referral-earned">
                   <div className="referral-earned-ton">+{ref.earnedTon.toFixed(2)} TON</div>
-                  <div className="referral-earned-stars">+{ref.earnedStars.toFixed(0)} ⭐</div>
+                  <div className="referral-earned-stars">
+                    +<img src="/stars.png" alt="Stars" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '2px' }} />
+                    {ref.earnedStars.toFixed(0)}
+                  </div>
                 </div>
               </div>
             ))}
@@ -195,7 +191,7 @@ const UserProfile: React.FC = () => {
           <div className="referral-empty">
             <p>No referrals yet</p>
             <p style={{ fontSize: '12px', marginTop: '8px' }}>
-              Share your code and earn 10% from your friends' bets!
+              Share your link and earn 10% from your friends' bets!
             </p>
           </div>
         )}
