@@ -54,13 +54,6 @@ export const useReferral = () => {
     }
   }, [user, generateReferralCode]);
 
-  // Сохранение реферальных данных (используется внутри)
-  const saveReferralData = useCallback((data: ReferralData) => {
-    if (!user) return;
-    localStorage.setItem(`${REFERRAL_STORAGE_KEY}_${user.id}`, JSON.stringify(data));
-    setReferralData(data);
-  }, [user]);
-
   // Регистрация реферала
   const registerReferral = useCallback((referralCode: string, newUserId: number, firstName: string, username?: string) => {
     // Находим пригласившего пользователя по коду
@@ -99,6 +92,11 @@ export const useReferral = () => {
       
       referrerData.referrals.push(newReferral);
       localStorage.setItem(referrerKey, JSON.stringify(referrerData));
+      
+      // Обновляем состояние если это текущий пользователь
+      if (referrerId === user?.id) {
+        setReferralData(referrerData);
+      }
     }
 
     // Обновляем данные нового пользователя
@@ -111,7 +109,7 @@ export const useReferral = () => {
     }
 
     return true;
-  }, []);
+  }, [user]);
 
   // Начисление реферального вознаграждения
   const addReferralReward = useCallback((
@@ -164,10 +162,16 @@ export const useReferral = () => {
       }
 
       localStorage.setItem(referrerKey, JSON.stringify(referrerData));
+      
+      // Обновляем состояние если это текущий пользователь
+      if (referrerId === user?.id) {
+        setReferralData(referrerData);
+      }
+      
       currentUserId = referrerId;
       level++;
     }
-  }, []);
+  }, [user]);
 
   // Получение статистики
   const getReferralStats = useCallback((): ReferralStats => {
