@@ -128,7 +128,10 @@ const UserProfile: React.FC = () => {
             <div className="referral-stat-label">Total Referrals</div>
           </div>
           <div className="referral-stat-card">
-            <div className="referral-stat-value">{referralStats.totalEarnedTon.toFixed(2)} TON</div>
+            <div className="referral-stat-value">
+              <img src="/ton.png" alt="TON" style={{ width: '20px', height: '20px', verticalAlign: 'middle', marginRight: '4px' }} />
+              {referralStats.totalEarnedTon.toFixed(2)}
+            </div>
             <div className="referral-stat-label">Earned TON</div>
           </div>
           <div className="referral-stat-card">
@@ -140,7 +143,8 @@ const UserProfile: React.FC = () => {
           </div>
           <div className="referral-stat-card">
             <div className="referral-stat-value">
-              {referralStats.availableTon.toFixed(2)} TON +{' '}
+              <img src="/ton.png" alt="TON" style={{ width: '18px', height: '18px', verticalAlign: 'middle', marginRight: '2px' }} />
+              {referralStats.availableTon.toFixed(2)} +{' '}
               <img src="/stars.png" alt="Stars" style={{ width: '18px', height: '18px', verticalAlign: 'middle', marginRight: '2px' }} />
               {referralStats.availableStars.toFixed(0)}
             </div>
@@ -148,7 +152,7 @@ const UserProfile: React.FC = () => {
           </div>
         </div>
 
-        {/* Только реферальная ссылка, без кода */}
+        {/* Только реферальная ссылка */}
         <div className="referral-link-section">
           <div className="referral-link-label">Your Referral Link</div>
           <div className="referral-link-wrapper">
@@ -176,7 +180,10 @@ const UserProfile: React.FC = () => {
                   )}
                 </div>
                 <div className="referral-earned">
-                  <div className="referral-earned-ton">+{ref.earnedTon.toFixed(2)} TON</div>
+                  <div className="referral-earned-ton">
+                    +<img src="/ton.png" alt="TON" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '2px' }} />
+                    {ref.earnedTon.toFixed(2)}
+                  </div>
                   <div className="referral-earned-stars">
                     +<img src="/stars.png" alt="Stars" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '2px' }} />
                     {ref.earnedStars.toFixed(0)}
