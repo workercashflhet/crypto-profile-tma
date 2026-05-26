@@ -228,5 +228,25 @@ export const usePvPGame = () => {
     return parts.join(' + ') || '0';
   }, [currentRound]);
 
-  return { currentRound, betAmount, setBetAmount, selectedCurrency, setSelectedCurrency, isSpinning, rotationAngle, winner, error, balance, playerBets, calculateSegments, placeBet, spinWheel, resetRound, getTotalPool, getTokenPrices };
+return {
+  currentRound,
+  betAmount,
+  setBetAmount,
+  selectedCurrency,
+  setSelectedCurrency,
+  isSpinning,
+  rotationAngle,
+  winner,
+  error,
+  balance,
+  playerBets,
+  calculateSegments,
+  placeBet,
+  spinWheel,
+  resetRound,
+  getTotalPool,
+  getTokenPrices,
+  depositTon,
+  depositStars,
+};
 };

@@ -5,7 +5,7 @@ import LuckyWheel from './LuckyWheel';
 import DepositModal from './DepositModal';
 import './PvPGame.css';
 
-const TON_TO_STARS_RATE = 76; // 1 TON ≈ 76 Stars
+const TON_TO_STARS_RATE = 76;
 
 const PvPGame: React.FC = () => {
   const {
@@ -24,6 +24,8 @@ const PvPGame: React.FC = () => {
     placeBet,
     spinWheel,
     getTotalPool,
+    depositTon,
+    depositStars,
   } = usePvPGame();
 
   const segments = calculateSegments();
@@ -33,7 +35,7 @@ const PvPGame: React.FC = () => {
     if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
       spinWheel();
     }
-  }, [currentRound?.status]);
+  }, [currentRound?.status, isSpinning, spinWheel]);
 
   const getPlayerAvatar = (player: { avatar?: string; userId: number }) => {
     if (player.avatar) return player.avatar;
@@ -46,6 +48,11 @@ const PvPGame: React.FC = () => {
 
   const handleDeposit = (amount: number, currency: 'ton' | 'stars') => {
     console.log(`Deposit successful: ${amount} ${currency}`);
+    if (currency === 'ton') {
+      depositTon(amount);
+    } else {
+      depositStars(amount);
+    }
   };
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
@@ -64,7 +71,6 @@ const PvPGame: React.FC = () => {
     return parts.join(' + ');
   };
 
-  // ПРАВИЛЬНЫЙ расчет шанса с учетом курса TON/Stars
   const calculateWinChance = (player: { bets: { amount: number; currency: CurrencyType }[] }): string => {
     if (!currentRound) return '0';
     
