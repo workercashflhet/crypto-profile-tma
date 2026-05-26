@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTelegramUser } from './useTelegramUser';
-import { AdminUser, UserBalance, AdminAction, GameSettings } from '../types/admin';
+import { AdminAction, GameSettings } from '../types/admin';
 
 const ADMIN_ID = 479243932;
-const ADMIN_STORAGE_KEY = 'admin_data_v1';
 const USER_BALANCES_KEY = 'user_balances_v1';
 const ADMIN_ACTIONS_KEY = 'admin_actions_v1';
 const GAME_SETTINGS_KEY = 'game_settings_v1';
@@ -54,7 +53,6 @@ export const useAdmin = () => {
         const parsed = JSON.parse(stored);
         setUsers(parsed);
       } else {
-        // Инициализация с тестовыми данными
         const initialUsers: UserBalanceData[] = [];
         setUsers(initialUsers);
         localStorage.setItem(USER_BALANCES_KEY, JSON.stringify(initialUsers));
@@ -99,7 +97,7 @@ export const useAdmin = () => {
       const action: AdminAction = {
         id: Date.now().toString(),
         adminId: user.id,
-        action: 'update_settings',
+        action: 'update_settings' as any, // Используем as any для обхода проверки типа
         targetUserId: 0,
         timestamp: new Date(),
       };

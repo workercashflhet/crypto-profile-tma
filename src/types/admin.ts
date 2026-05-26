@@ -21,10 +21,18 @@ export interface UserBalance {
   lastActive: Date;
 }
 
+export type AdminActionType = 
+  | 'add_balance' 
+  | 'remove_balance' 
+  | 'reset_balance' 
+  | 'ban_user' 
+  | 'unban_user'
+  | 'update_settings';
+
 export interface AdminAction {
   id: string;
   adminId: number;
-  action: 'add_balance' | 'remove_balance' | 'reset_balance' | 'ban_user' | 'unban_user';
+  action: AdminActionType;
   targetUserId: number;
   amount?: number;
   currency?: 'ton' | 'stars';
