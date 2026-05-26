@@ -240,14 +240,15 @@ export const useAdmin = () => {
   }, [isAdmin, loadAllUsers, loadAdminActions, loadSettings]);
 
   return {
-    isAdmin,
-    users,
-    actions,
-    settings,
-    isLoading,
-    updateUserBalance,
-    saveSettings,
-    getStats,
-    loadAllUsers,
-  };
+  isAdmin,
+  users,
+  actions,
+  settings,
+  setSettings,  // <-- ДОБАВИТЬ ЭТУ СТРОКУ
+  isLoading,
+  updateUserBalance,
+  saveSettings,
+  getStats,
+  loadAllUsers,
+};
 };

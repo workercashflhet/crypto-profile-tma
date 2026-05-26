@@ -3,9 +3,9 @@ import { useAdmin } from '../hooks/useAdmin';
 import './AdminPanel.css';
 
 const AdminPanel: React.FC = () => {
-  const { isAdmin, users, actions, settings, isLoading, updateUserBalance, saveSettings, getStats } = useAdmin();
+  const { isAdmin, users, actions, settings, setSettings, isLoading, updateUserBalance, saveSettings, getStats } = useAdmin();
   const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'settings' | 'logs'>('stats');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [amount, setAmount] = useState<string>('');
   const [reason, setReason] = useState<string>('');
 
@@ -183,7 +183,7 @@ const AdminPanel: React.FC = () => {
               type="number"
               className="settings-input"
               value={settings.roundDuration}
-              onChange={(e) => setSettings({ ...settings, roundDuration: parseInt(e.target.value) })}
+              onChange={(e) => setSettings({ ...settings, roundDuration: parseInt(e.target.value) || 30 })}
             />
           </div>
           
@@ -193,7 +193,7 @@ const AdminPanel: React.FC = () => {
               type="number"
               className="settings-input"
               value={settings.minBet}
-              onChange={(e) => setSettings({ ...settings, minBet: parseInt(e.target.value) })}
+              onChange={(e) => setSettings({ ...settings, minBet: parseInt(e.target.value) || 1 })}
             />
           </div>
           
@@ -203,7 +203,7 @@ const AdminPanel: React.FC = () => {
               type="number"
               className="settings-input"
               value={settings.maxBet}
-              onChange={(e) => setSettings({ ...settings, maxBet: parseInt(e.target.value) })}
+              onChange={(e) => setSettings({ ...settings, maxBet: parseInt(e.target.value) || 1000 })}
             />
           </div>
           
@@ -213,7 +213,7 @@ const AdminPanel: React.FC = () => {
               type="number"
               className="settings-input"
               value={settings.tonToStarsRate}
-              onChange={(e) => setSettings({ ...settings, tonToStarsRate: parseInt(e.target.value) })}
+              onChange={(e) => setSettings({ ...settings, tonToStarsRate: parseInt(e.target.value) || 76 })}
             />
           </div>
           
@@ -255,7 +255,7 @@ const AdminPanel: React.FC = () => {
                   <span>{new Date(action.timestamp).toLocaleString()}</span>
                 </div>
                 <div className="action-header">
-                  <span className="action-type">{action.action.replace('_', ' ').toUpperCase()}</span>
+                  <span className="action-type">{action.action.replace(/_/g, ' ').toUpperCase()}</span>
                   <span>User ID: {action.targetUserId || 'N/A'}</span>
                 </div>
                 {action.amount && (
