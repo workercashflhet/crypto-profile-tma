@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { PvPRound, PvPPlayer, CurrencyType, PlayerBet } from '../types/pvp';
 import { useTelegramUser } from './useTelegramUser';
 import { useGameBalance } from './useGameBalance';
+import { useReferral } from './useReferral';
 import { getTokenPrices } from '../services/priceService';
 
 const ROUND_DURATION = 30;
@@ -22,6 +23,7 @@ const MOCK_PLAYERS: PvPPlayer[] = [
 export const usePvPGame = () => {
   const { user } = useTelegramUser();
   const { balance, withdrawTon, withdrawStars, depositTon, depositStars, hasEnoughTon, hasEnoughStars } = useGameBalance();
+  const { addReferralReward } = useReferral();
 
   const [currentRound, setCurrentRound] = useState<PvPRound | null>(null);
   const [betAmount, setBetAmount] = useState<number>(10);
@@ -38,7 +40,7 @@ export const usePvPGame = () => {
 
   const getTotalPoolUsd = useCallback((round: PvPRound): number => {
     const prices = getTokenPrices();
-    return (round.totalPoolTon * prices.ton) + (round.totalPoolStars * 0.013); // 1 Star ≈ $0.013
+    return (round.totalPoolTon * prices.ton) + (round.totalPoolStars * 0.013);
   }, []);
 
   const getPlayerBetUsd = useCallback((player: PvPPlayer): number => {
@@ -141,6 +143,9 @@ export const usePvPGame = () => {
       withdrawStars(amount);
     }
 
+    // НАЧИСЛЕНИЕ РЕФЕРАЛЬНОГО ВОЗНАГРАЖДЕНИЯ
+    addReferralReward(user.id, amount, currency);
+
     const newBet: PlayerBet = { amount, currency, timestamp: Date.now() };
     setPlayerBets(prev => [...prev, newBet]);
 
@@ -171,7 +176,7 @@ export const usePvPGame = () => {
 
     if (currentRound.players.length === 0) { setTimeout(() => { addBotPlayer(); setTimeout(() => addBotPlayer(), 1500); }, 1000); }
     return true;
-  }, [user, currentRound, addBotPlayer, withdrawTon, withdrawStars, hasEnoughTon, hasEnoughStars, balance]);
+  }, [user, currentRound, addBotPlayer, withdrawTon, withdrawStars, hasEnoughTon, hasEnoughStars, balance, addReferralReward]);
 
   const calculateSegments = useCallback(() => {
     if (!currentRound || currentRound.players.length === 0) return [];
@@ -228,25 +233,25 @@ export const usePvPGame = () => {
     return parts.join(' + ') || '0';
   }, [currentRound]);
 
-return {
-  currentRound,
-  betAmount,
-  setBetAmount,
-  selectedCurrency,
-  setSelectedCurrency,
-  isSpinning,
-  rotationAngle,
-  winner,
-  error,
-  balance,
-  playerBets,
-  calculateSegments,
-  placeBet,
-  spinWheel,
-  resetRound,
-  getTotalPool,
-  getTokenPrices,
-  depositTon,
-  depositStars,
-};
+  return {
+    currentRound,
+    betAmount,
+    setBetAmount,
+    selectedCurrency,
+    setSelectedCurrency,
+    isSpinning,
+    rotationAngle,
+    winner,
+    error,
+    balance,
+    playerBets,
+    calculateSegments,
+    placeBet,
+    spinWheel,
+    resetRound,
+    getTotalPool,
+    getTokenPrices,
+    depositTon,
+    depositStars,
+  };
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import UserProfile from './components/UserProfile';
 import WalletConnect from './components/WalletConnect';
@@ -13,8 +13,22 @@ type Tab = 'pvp' | 'profile' | 'admin';
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('pvp');
-  const { user } = useTelegramUser();
+  const { user, isLoading } = useTelegramUser();
+  
+  // Отладка
+  useEffect(() => {
+    if (user) {
+      console.log('Current user:', user);
+      console.log('User ID:', user.id);
+      console.log('Is Admin (479243932)?', user.id === 479243932);
+    }
+  }, [user]);
+
   const isAdmin = user?.id === 479243932;
+
+  if (isLoading) {
+    return <div className="app">Loading...</div>;
+  }
 
   return (
     <div className="app">
