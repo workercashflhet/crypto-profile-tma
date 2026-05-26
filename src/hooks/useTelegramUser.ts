@@ -10,13 +10,14 @@ export interface TelegramUser {
   isPremium: boolean;
 }
 
+// Обычный пользователь для теста (НЕ АДМИН)
 const MOCK_USER: TelegramUser = {
-  id: 479243932, // ВРЕМЕННО: установлен ID админа для теста
-  firstName: 'Admin',
-  lastName: 'Test',
-  username: 'admin',
+  id: 999999999, // Не админский ID
+  firstName: 'Test',
+  lastName: 'User',
+  username: 'testuser',
   photoUrl: undefined,
-  isPremium: true,
+  isPremium: false,
 };
 
 export const useTelegramUser = (): { 
@@ -50,7 +51,7 @@ export const useTelegramUser = (): {
           });
           
           if (photo) {
-            setUser(prev => prev ? { ...prev, photoUrl: photo } : prev);
+            setUser(prev => prev ? { ...prev, photoUrl } : prev);
             return;
           }
         } catch (e) {
@@ -72,22 +73,15 @@ export const useTelegramUser = (): {
       try {
         const launchParams = retrieveLaunchParams();
         
-        console.log('Launch params:', launchParams);
-        
         if (launchParams.tgWebAppData?.user) {
           const tgUser = launchParams.tgWebAppData.user;
-          
-          // ВАЖНО: убедитесь, что id - это число
           const userId = Number(tgUser.id);
           
-          console.log('Raw tgUser:', tgUser);
-          console.log('User ID (number):', userId);
-          console.log('Is admin check (479243932)?', userId === 479243932);
+          console.log('Telegram User ID:', userId);
+          console.log('Is Admin?', userId === 479243932);
           
           const firstName = String(tgUser.firstName || '');
           const lastName = tgUser.lastName ? String(tgUser.lastName) : undefined;
-          
-          // Если имя пустое, используем username или "User"
           const displayName = firstName || '';
           
           let photoUrl: string | undefined;
@@ -105,21 +99,18 @@ export const useTelegramUser = (): {
             isPremium: Boolean(tgUser.isPremium),
           };
           
-          console.log('Created userData:', userData);
-          console.log('Final admin check:', userData.id === 479243932);
-          
           setUser(userData);
           
           if (!photoUrl) {
             setTimeout(() => loadUserPhoto(), 500);
           }
         } else {
-          console.log('No tgWebAppData.user found, using mock admin user');
+          console.log('No tgWebAppData.user found, using mock user (not admin)');
           setUser(MOCK_USER);
         }
       } catch (error) {
         console.error('Failed to retrieve launch params:', error);
-        console.log('Using mock admin user due to error');
+        console.log('Using mock user (not admin) due to error');
         setUser(MOCK_USER);
       } finally {
         setIsLoading(false);
