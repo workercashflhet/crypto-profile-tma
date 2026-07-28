@@ -16,7 +16,7 @@ function getDefaultGameData() {
     timeLeft: ROUND_DURATION,
     lastUpdated: Date.now(),
     timerStarted: false,
-    history: [], // <-- Убеждаемся, что history всегда есть
+    history: [],
   };
 }
 
@@ -26,7 +26,6 @@ function readGameData() {
       const data = fs.readFileSync(DATA_PATH, 'utf8');
       const parsed = JSON.parse(data);
       
-      // Проверяем наличие всех полей
       if (!parsed.history) {
         parsed.history = [];
       }
@@ -53,11 +52,22 @@ function readGameData() {
 
 function writeGameData(data) {
   try {
-    // Убеждаемся, что history существует
     if (!data.history) {
       data.history = [];
     }
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
+    
+    // Уведомляем клиентов через событие (если есть SSE)
+    try {
+      const eventPath = '/tmp/game_event.json';
+      fs.writeFileSync(eventPath, JSON.stringify({
+        type: 'game_update',
+        data: data,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      // Игнорируем ошибки уведомления
+    }
   } catch (error) {
     console.error('Error writing game data:', error);
   }
@@ -109,7 +119,6 @@ module.exports = async function handler(req, res) {
     try {
       const data = readGameData();
       
-      // Убеждаемся, что history существует
       if (!data.history) {
         data.history = [];
       }
@@ -129,7 +138,6 @@ module.exports = async function handler(req, res) {
           data.status = 'finished';
           data.winner = result.winner;
           
-          // Убеждаемся, что history существует перед push
           if (!data.history) {
             data.history = [];
           }
@@ -142,7 +150,6 @@ module.exports = async function handler(req, res) {
         }
       }
       
-      // Безопасно получаем историю (последние 10 записей)
       const history = data.history || [];
       
       return res.status(200).json({
@@ -167,7 +174,6 @@ module.exports = async function handler(req, res) {
       const { action, payload } = req.body;
       const data = readGameData();
       
-      // Убеждаемся, что history существует
       if (!data.history) {
         data.history = [];
       }
@@ -180,6 +186,7 @@ module.exports = async function handler(req, res) {
             return res.status(400).json({ error: 'Game is already in progress' });
           }
 
+          // Проверяем, есть ли уже такой игрок
           let player = data.players.find(p => p.userId === userId);
           
           if (player) {
@@ -195,7 +202,7 @@ module.exports = async function handler(req, res) {
               userId,
               username,
               firstName,
-              avatar,
+              avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
               bets: [{ amount, currency, timestamp: Date.now() }],
               totalBet: amount,
               currency,
@@ -210,6 +217,7 @@ module.exports = async function handler(req, res) {
             data.totalPoolStars += amount;
           }
 
+          // Запускаем таймер если достаточно игроков
           if (data.players.length >= MIN_PLAYERS_TO_START && 
               (data.status === 'waiting' || data.status === 'active') && 
               !data.timerStarted) {
@@ -254,7 +262,6 @@ module.exports = async function handler(req, res) {
           data.timeLeft = ROUND_DURATION;
           data.lastUpdated = Date.now();
           data.timerStarted = false;
-          // Не сбрасываем историю
           
           writeGameData(data);
           return res.status(200).json({ success: true, data });
