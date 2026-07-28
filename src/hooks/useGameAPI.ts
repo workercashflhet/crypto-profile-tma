@@ -41,6 +41,16 @@ export interface GameState {
   history: RoundHistory[];
 }
 
+// Определяем базовый URL для API
+const getApiUrl = () => {
+  // В продакшене используем относительный путь
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return '/api/game/state';
+  }
+  // Для локальной разработки используем полный URL
+  return `${window.location.origin}/api/game/state`;
+};
+
 export const useGameAPI = () => {
   const { user } = useTelegramUser();
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -50,18 +60,27 @@ export const useGameAPI = () => {
   // Получение состояния игры
   const fetchGameState = useCallback(async () => {
     try {
-      const response = await fetch('/api/game/state');
+      const apiUrl = getApiUrl();
+      console.log('Fetching game state from:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       const result = await response.json();
       
       if (result.success) {
         setGameState(result.data);
         setError(null);
       } else {
-        setError('Failed to load game state');
+        setError(result.error || 'Failed to load game state');
       }
     } catch (err) {
       console.error('Error fetching game state:', err);
-      setError('Network error');
+      setError('Network error - please try again');
     } finally {
       setIsLoading(false);
     }
@@ -69,12 +88,20 @@ export const useGameAPI = () => {
 
   // Размещение ставки
   const placeBet = useCallback(async (amount: number, currency: 'ton' | 'stars') => {
-    if (!user) return false;
+    if (!user) {
+      setError('User not authenticated');
+      return false;
+    }
 
     try {
-      const response = await fetch('/api/game/state', {
+      const apiUrl = getApiUrl();
+      console.log('Placing bet to:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           action: 'place_bet',
           payload: {
@@ -92,6 +119,7 @@ export const useGameAPI = () => {
       
       if (result.success) {
         setGameState(result.data);
+        setError(null);
         return true;
       } else {
         setError(result.error || 'Failed to place bet');
@@ -99,7 +127,7 @@ export const useGameAPI = () => {
       }
     } catch (err) {
       console.error('Error placing bet:', err);
-      setError('Network error');
+      setError('Network error - please try again');
       return false;
     }
   }, [user]);
@@ -107,9 +135,13 @@ export const useGameAPI = () => {
   // Запуск вращения
   const spinWheel = useCallback(async () => {
     try {
-      const response = await fetch('/api/game/state', {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ action: 'spin' }),
       });
 
@@ -117,6 +149,7 @@ export const useGameAPI = () => {
       
       if (result.success) {
         setGameState(result.data);
+        setError(null);
         return result.data.winner;
       } else {
         setError(result.error || 'Failed to spin');
@@ -124,7 +157,7 @@ export const useGameAPI = () => {
       }
     } catch (err) {
       console.error('Error spinning:', err);
-      setError('Network error');
+      setError('Network error - please try again');
       return null;
     }
   }, []);
@@ -132,9 +165,13 @@ export const useGameAPI = () => {
   // Сброс игры
   const resetGame = useCallback(async () => {
     try {
-      const response = await fetch('/api/game/state', {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ action: 'reset' }),
       });
 
@@ -142,6 +179,7 @@ export const useGameAPI = () => {
       
       if (result.success) {
         setGameState(result.data);
+        setError(null);
         return true;
       } else {
         setError(result.error || 'Failed to reset');
@@ -149,7 +187,7 @@ export const useGameAPI = () => {
       }
     } catch (err) {
       console.error('Error resetting game:', err);
-      setError('Network error');
+      setError('Network error - please try again');
       return false;
     }
   }, []);
@@ -157,12 +195,16 @@ export const useGameAPI = () => {
   // Получение истории
   const getHistory = useCallback(async (limit?: number) => {
     try {
-      const response = await fetch('/api/game/state', {
+      const apiUrl = getApiUrl();
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           action: 'get_history',
-          payload: { limit },
+          payload: { limit: limit || 50 },
         }),
       });
 
