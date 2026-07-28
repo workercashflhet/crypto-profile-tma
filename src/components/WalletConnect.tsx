@@ -23,8 +23,6 @@ const WalletConnect: React.FC = () => {
     );
   }
 
-  const shortAddress = `${wallet.account.address.slice(0, 6)}...${wallet.account.address.slice(-6)}`;
-
   return (
     <div className="wallet-container">
       <div className="wallet-info">
@@ -32,26 +30,6 @@ const WalletConnect: React.FC = () => {
           <div className="wallet-status-indicator" />
           <span className="wallet-status-text">Connected</span>
           <div className="wallet-chain-badge">TON Mainnet</div>
-        </div>
-        
-        <div className="wallet-address-section">
-          <div className="wallet-label">Address</div>
-          <div className="wallet-address-wrapper">
-            <div 
-              className="wallet-address-full" 
-              onClick={() => navigator.clipboard.writeText(wallet.account.address)}
-              title="Click to copy"
-            >
-              {shortAddress}
-            </div>
-            <button 
-              onClick={() => navigator.clipboard.writeText(wallet.account.address)}
-              className="copy-button"
-              title="Copy address"
-            >
-              📋
-            </button>
-          </div>
         </div>
 
         <div className="balances-container">
