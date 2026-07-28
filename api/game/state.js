@@ -1,10 +1,10 @@
 // api/game/state.js
 const fs = require('fs');
 
-// Путь к файлу с данными (в /tmp для Vercel)
 const DATA_PATH = '/tmp/game_data.json';
+const ROUND_DURATION = 30; // секунд на раунд
+const MIN_PLAYERS_TO_START = 2; // минимальное количество игроков для старта
 
-// Инициализация данных
 function getDefaultGameData() {
   return {
     roundNumber: 1,
@@ -13,18 +13,22 @@ function getDefaultGameData() {
     totalPoolTon: 0,
     totalPoolStars: 0,
     status: 'waiting',
-    timeLeft: 30,
+    timeLeft: ROUND_DURATION,
     lastUpdated: Date.now(),
-    history: [],
+    timerStarted: false, // флаг, что таймер запущен
   };
 }
 
-// Чтение данных
 function readGameData() {
   try {
     if (fs.existsSync(DATA_PATH)) {
       const data = fs.readFileSync(DATA_PATH, 'utf8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      // Добавляем поле timerStarted если его нет
+      if (parsed.timerStarted === undefined) {
+        parsed.timerStarted = false;
+      }
+      return parsed;
     }
   } catch (error) {
     console.error('Error reading game data:', error);
@@ -32,7 +36,6 @@ function readGameData() {
   return getDefaultGameData();
 }
 
-// Запись данных
 function writeGameData(data) {
   try {
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
@@ -42,7 +45,6 @@ function writeGameData(data) {
 }
 
 module.exports = async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -54,6 +56,31 @@ module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const data = readGameData();
+      
+      // Если таймер запущен, уменьшаем время
+      if (data.timerStarted && data.status === 'active') {
+        const elapsed = Math.floor((Date.now() - data.lastUpdated) / 1000);
+        data.timeLeft = Math.max(0, data.timeLeft - elapsed);
+        data.lastUpdated = Date.now();
+        
+        // Если время вышло - запускаем вращение
+        if (data.timeLeft <= 0 && data.players.length >= MIN_PLAYERS_TO_START) {
+          data.status = 'spinning';
+          data.timeLeft = 0;
+          writeGameData(data);
+          
+          // Запускаем определение победителя
+          const result = spinWheel(data);
+          data.status = 'finished';
+          data.winner = result.winner;
+          data.history.push(result.historyEntry);
+          data.roundNumber += 1;
+          data.roundId = `round_${Date.now()}`;
+          data.timerStarted = false;
+          writeGameData(data);
+        }
+      }
+      
       return res.status(200).json({
         success: true,
         data: {
@@ -76,6 +103,11 @@ module.exports = async function handler(req, res) {
         case 'place_bet': {
           const { userId, username, firstName, avatar, amount, currency } = payload;
           
+          // Проверяем, не идет ли уже игра
+          if (data.status === 'spinning' || data.status === 'finished') {
+            return res.status(400).json({ error: 'Game is already in progress' });
+          }
+
           let player = data.players.find(p => p.userId === userId);
           
           if (player) {
@@ -106,62 +138,35 @@ module.exports = async function handler(req, res) {
             data.totalPoolStars += amount;
           }
 
-          if (data.players.length > 0 && data.status === 'waiting') {
+          // Если достаточно игроков и статус waiting или active - запускаем таймер
+          if (data.players.length >= MIN_PLAYERS_TO_START && 
+              (data.status === 'waiting' || data.status === 'active') && 
+              !data.timerStarted) {
             data.status = 'active';
+            data.timerStarted = true;
+            data.timeLeft = ROUND_DURATION;
+            data.lastUpdated = Date.now();
           }
 
-          data.lastUpdated = Date.now();
           writeGameData(data);
 
           return res.status(200).json({ success: true, data });
         }
 
         case 'spin': {
-          if (data.players.length === 0) {
-            return res.status(400).json({ error: 'No players in game' });
+          if (data.players.length < MIN_PLAYERS_TO_START) {
+            return res.status(400).json({ error: 'Not enough players' });
           }
 
-          data.status = 'spinning';
-          data.lastUpdated = Date.now();
-          writeGameData(data);
-
-          const totalUsd = data.totalPoolTon * 2.5 + data.totalPoolStars * 0.013;
-          let random = Math.random() * totalUsd;
-          let winner = data.players[0];
-
-          for (const player of data.players) {
-            const playerUsd = player.bets
-              .filter(b => b.currency === 'ton')
-              .reduce((sum, b) => sum + b.amount * 2.5, 0) +
-              player.bets
-              .filter(b => b.currency === 'stars')
-              .reduce((sum, b) => sum + b.amount * 0.013, 0);
-            
-            random -= playerUsd;
-            if (random <= 0) {
-              winner = player;
-              break;
-            }
-          }
-
-          data.winner = winner;
+          const result = spinWheel(data);
           data.status = 'finished';
-          data.lastUpdated = Date.now();
-
-          data.history.push({
-            roundNumber: data.roundNumber,
-            roundId: data.roundId,
-            winner: winner,
-            totalPoolTon: data.totalPoolTon,
-            totalPoolStars: data.totalPoolStars,
-            timestamp: Date.now(),
-          });
-
+          data.winner = result.winner;
+          data.history.push(result.historyEntry);
           data.roundNumber += 1;
           data.roundId = `round_${Date.now()}`;
+          data.timerStarted = false;
           
           writeGameData(data);
-
           return res.status(200).json({ success: true, data });
         }
 
@@ -171,8 +176,9 @@ module.exports = async function handler(req, res) {
           data.totalPoolStars = 0;
           data.status = 'waiting';
           data.winner = undefined;
-          data.timeLeft = 30;
+          data.timeLeft = ROUND_DURATION;
           data.lastUpdated = Date.now();
+          data.timerStarted = false;
           
           writeGameData(data);
           return res.status(200).json({ success: true, data });
@@ -197,3 +203,37 @@ module.exports = async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 };
+
+// Функция вращения колеса
+function spinWheel(data) {
+  const totalUsd = data.totalPoolTon * 2.5 + data.totalPoolStars * 0.013;
+  let random = Math.random() * totalUsd;
+  let winner = data.players[0];
+
+  for (const player of data.players) {
+    const playerUsd = player.bets
+      .filter(b => b.currency === 'ton')
+      .reduce((sum, b) => sum + b.amount * 2.5, 0) +
+      player.bets
+      .filter(b => b.currency === 'stars')
+      .reduce((sum, b) => sum + b.amount * 0.013, 0);
+    
+    random -= playerUsd;
+    if (random <= 0) {
+      winner = player;
+      break;
+    }
+  }
+
+  return {
+    winner: winner,
+    historyEntry: {
+      roundNumber: data.roundNumber,
+      roundId: data.roundId,
+      winner: winner,
+      totalPoolTon: data.totalPoolTon,
+      totalPoolStars: data.totalPoolStars,
+      timestamp: Date.now(),
+    }
+  };
+}

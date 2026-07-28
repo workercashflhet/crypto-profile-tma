@@ -41,15 +41,7 @@ export interface GameState {
   history: RoundHistory[];
 }
 
-// Определяем базовый URL для API
-const getApiUrl = () => {
-  // В продакшене используем относительный путь
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return '/api/game/state';
-  }
-  // Для локальной разработки используем полный URL
-  return `${window.location.origin}/api/game/state`;
-};
+const API_URL = '/api/game/state';
 
 export const useGameAPI = () => {
   const { user } = useTelegramUser();
@@ -57,18 +49,18 @@ export const useGameAPI = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Получение состояния игры
   const fetchGameState = useCallback(async () => {
     try {
-      const apiUrl = getApiUrl();
-      console.log('Fetching game state from:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_URL, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
       const result = await response.json();
       
@@ -86,7 +78,6 @@ export const useGameAPI = () => {
     }
   }, []);
 
-  // Размещение ставки
   const placeBet = useCallback(async (amount: number, currency: 'ton' | 'stars') => {
     if (!user) {
       setError('User not authenticated');
@@ -94,10 +85,7 @@ export const useGameAPI = () => {
     }
 
     try {
-      const apiUrl = getApiUrl();
-      console.log('Placing bet to:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -132,12 +120,9 @@ export const useGameAPI = () => {
     }
   }, [user]);
 
-  // Запуск вращения
   const spinWheel = useCallback(async () => {
     try {
-      const apiUrl = getApiUrl();
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -162,12 +147,9 @@ export const useGameAPI = () => {
     }
   }, []);
 
-  // Сброс игры
   const resetGame = useCallback(async () => {
     try {
-      const apiUrl = getApiUrl();
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -192,12 +174,9 @@ export const useGameAPI = () => {
     }
   }, []);
 
-  // Получение истории
   const getHistory = useCallback(async (limit?: number) => {
     try {
-      const apiUrl = getApiUrl();
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -216,12 +195,13 @@ export const useGameAPI = () => {
     }
   }, []);
 
-  // Автоматическое обновление состояния
+  // Автоматическое обновление состояния каждую секунду
   useEffect(() => {
     fetchGameState();
     
-    // Обновляем каждые 2 секунды
-    const interval = setInterval(fetchGameState, 2000);
+    const interval = setInterval(() => {
+      fetchGameState();
+    }, 1000); // Обновляем каждую секунду для точного таймера
     
     return () => clearInterval(interval);
   }, [fetchGameState]);
