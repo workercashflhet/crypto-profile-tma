@@ -1,5 +1,6 @@
 // src/pages/NewPvPGame.tsx
 import React, { useState, useEffect } from 'react';
+import { useSSE } from '../hooks/useSSE';
 import { useGameAPI } from '../hooks/useGameAPI';
 import { useGameBalance } from '../hooks/useGameBalance';
 import LuckyWheel from '../components/LuckyWheel';
@@ -15,7 +16,9 @@ const BALL_OPTIONS = [
 ];
 
 export const NewPvPGame: React.FC = () => {
-  const { gameState, isLoading, error, placeBet, spinWheel, resetGame } = useGameAPI();
+  // Используем SSE для реального времени
+  const { gameState: sseGameState, isConnected, error: sseError } = useSSE();
+  const { placeBet, spinWheel, resetGame } = useGameAPI();
   const { balance, withdrawTon, withdrawStars, depositTon, depositStars } = useGameBalance();
   
   const [betAmount, setBetAmount] = useState<number>(1);
@@ -24,19 +27,20 @@ export const NewPvPGame: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
+  
+  // Используем состояние из SSE, если доступно
+  const gameState = sseGameState;
 
   // Эффект для автоматического вращения
   useEffect(() => {
     if (gameState?.status === 'spinning' && !isSpinning) {
       setIsSpinning(true);
-      // Симулируем вращение
       const spinDuration = 5000;
       const targetAngle = 360 * 8 + Math.random() * 360;
       setRotationAngle(targetAngle);
       
       setTimeout(() => {
         setIsSpinning(false);
-        // После вращения обновляем состояние
         spinWheel();
       }, spinDuration);
     }
@@ -83,12 +87,10 @@ export const NewPvPGame: React.FC = () => {
       withdrawStars(betAmount);
     }
 
-    // Отправляем ставку на сервер
     const success = await placeBet(betAmount, selectedCurrency);
     
     if (success) {
       setLocalError(null);
-      // Сбрасываем ошибку через 3 секунды
       setTimeout(() => setLocalError(null), 3000);
     } else {
       // Возвращаем средства при ошибке
@@ -123,7 +125,7 @@ export const NewPvPGame: React.FC = () => {
     
     return (
       <span className="pool-display">
-        {parts.map((part, index) => (
+        {parts.map((part: React.ReactNode, index: number) => (
           <React.Fragment key={index}>
             {part}
             {index < parts.length - 1 && <span className="pool-plus"> + </span>}
@@ -144,7 +146,7 @@ export const NewPvPGame: React.FC = () => {
     }
   };
 
-  const getStatusDotClass = () => {
+  const getStatusDotClass = (): string => {
     if (!gameState) return 'waiting';
     return gameState.status;
   };
@@ -156,14 +158,24 @@ export const NewPvPGame: React.FC = () => {
   };
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
-  const displayError = error || localError;
+  const displayError = localError || sseError;
 
-  if (isLoading) {
-    return <div className="new-pvp-page">Loading game...</div>;
-  }
+  // Индикатор соединения
+  const connectionStatus = isConnected ? '🟢 Live' : '🔴 Offline';
 
   return (
     <div className="new-pvp-page">
+      {/* Индикатор соединения */}
+      <div className="connection-status">
+        <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`} />
+        <span className="status-text">{connectionStatus}</span>
+        {!isConnected && (
+          <button className="reconnect-btn" onClick={() => window.location.reload()}>
+            Reconnect
+          </button>
+        )}
+      </div>
+
       {/* Balance */}
       <div className="pvp-balance card">
         <div className="balance-row">
@@ -191,7 +203,7 @@ export const NewPvPGame: React.FC = () => {
       {/* Wheel */}
       <div className="wheel-wrapper">
         <LuckyWheel 
-          segments={gameState?.players.map(p => ({
+          segments={gameState?.players.map((p: any) => ({
             color: p.color,
             percentage: 0,
             player: p,
@@ -312,12 +324,12 @@ export const NewPvPGame: React.FC = () => {
       {/* Players List */}
       <div className="players-list card">
         <h3>🎮 Players</h3>
-        {gameState?.players.map((player, index) => (
+        {gameState?.players.map((player: any, index: number) => (
           <div key={index} className="player-item">
             <div className="player-color" style={{ backgroundColor: player.color }} />
             <span className="player-name">{player.firstName}</span>
             <span className="player-bet">
-              {player.bets.map(b => `${b.amount} ${b.currency}`).join(' + ')}
+              {player.bets.map((b: any) => `${b.amount} ${b.currency}`).join(' + ')}
             </span>
           </div>
         ))}
