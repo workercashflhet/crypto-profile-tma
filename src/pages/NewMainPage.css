@@ -1,0 +1,222 @@
+/* src/pages/NewMainPage.css */
+.new-main-page {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Header */
+.new-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+
+.header-time {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.header-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Balance Block */
+.balance-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px !important;
+  margin-bottom: 16px;
+}
+
+.balance-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.deposit-btn {
+  padding: 10px 24px !important;
+  font-size: 14px !important;
+}
+
+/* Giveaway Block */
+.giveaway-block {
+  padding: 16px !important;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--bg-card), #2A1A1A);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.giveaway-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.giveaway-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.giveaway-prize {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Games Scroll */
+.games-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  margin-bottom: 16px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.games-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.game-tab {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border: none;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.game-tab.active {
+  background: var(--accent-green);
+  color: white;
+}
+
+.game-icon {
+  font-size: 18px;
+}
+
+.game-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Daily Spin */
+.daily-spin {
+  padding: 16px !important;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, var(--bg-card), #1A2A1A);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+}
+
+.spin-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spin-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.spin-info {
+  flex: 1;
+}
+
+.spin-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.spin-info p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.spin-button {
+  padding: 8px 20px !important;
+  font-size: 14px !important;
+}
+
+/* Featured Games */
+.featured-games h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.game-card {
+  padding: 16px !important;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.game-card:active {
+  transform: scale(0.95);
+}
+
+.game-card-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.game-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.game-card-players {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Адаптивность */
+@media (max-width: 400px) {
+  .balance-amount {
+    font-size: 22px;
+  }
+  
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .game-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .game-name {
+    font-size: 12px;
+  }
+}

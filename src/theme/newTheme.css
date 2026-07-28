@@ -1,0 +1,106 @@
+/* src/styles/newTheme.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Новая тема */
+.theme-new {
+  --bg-primary: #0A0A0A;
+  --bg-card: #1A1A1A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8E8E93;
+  --accent-green: #34C759;
+  --accent-gold: #FFD700;
+  --border-color: #2C2C2E;
+  --font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.theme-new * {
+  font-family: var(--font-family);
+}
+
+/* Переопределяем глобальные стили для новой темы */
+.theme-new .app {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.theme-new .bottom-nav {
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Карточки */
+.theme-new .card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+/* Кнопки */
+.theme-new .btn-primary {
+  background: var(--accent-green);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.theme-new .btn-primary:active {
+  transform: scale(0.95);
+}
+
+.theme-new .btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Заголовки */
+.theme-new h1, .theme-new h2, .theme-new h3 {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.theme-new .text-balance {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.theme-new .text-secondary {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Анимации */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.theme-new .pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-new .slide-in {
+  animation: slideIn 0.3s ease-out;
+}

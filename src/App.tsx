@@ -1,21 +1,25 @@
+// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import UserProfile from './components/UserProfile';
 import WalletConnect from './components/WalletConnect';
 import PvPGame from './components/PvPGame';
 import AdminPanel from './components/AdminPanel';
+import { NewMainPage } from './pages/NewMainPage';
+import { ThemeToggle } from './components/ThemeToggle';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import './App.css';
+import './styles/newTheme.css';
 
 const manifestUrl = 'https://raw.githubusercontent.com/workercashflhet/crypto-profile-tma/main/public/tonconnect-manifest.json';
 
-type Tab = 'pvp' | 'profile' | 'admin';
+type Tab = 'pvp' | 'profile' | 'admin' | 'new';
 
 const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('pvp');
+  const [activeTab, setActiveTab] = useState<Tab>('new');
+  const [isNewTheme, setIsNewTheme] = useState(true);
   const { user, isLoading } = useTelegramUser();
-  
-  // Отладка
+
   useEffect(() => {
     if (user) {
       console.log('Current user:', user);
@@ -26,12 +30,17 @@ const AppContent: React.FC = () => {
 
   const isAdmin = user?.id === 479243932;
 
+  const toggleTheme = () => {
+    setIsNewTheme(!isNewTheme);
+    document.body.classList.toggle('theme-new');
+  };
+
   if (isLoading) {
     return <div className="app">Loading...</div>;
   }
 
   return (
-    <div className="app">
+    <div className={`app ${isNewTheme ? 'theme-new' : ''}`}>
       <div className="app-content">
         {activeTab === 'profile' ? (
           <>
@@ -40,12 +49,21 @@ const AppContent: React.FC = () => {
           </>
         ) : activeTab === 'admin' && isAdmin ? (
           <AdminPanel />
+        ) : activeTab === 'new' ? (
+          <NewMainPage />
         ) : (
           <PvPGame />
         )}
       </div>
 
       <nav className="bottom-nav">
+        <button
+          className={`nav-item ${activeTab === 'new' ? 'active' : ''}`}
+          onClick={() => setActiveTab('new')}
+        >
+          <span className="nav-icon">🏠</span>
+          <span className="nav-label">Home</span>
+        </button>
         <button
           className={`nav-item ${activeTab === 'pvp' ? 'active' : ''}`}
           onClick={() => setActiveTab('pvp')}
@@ -70,6 +88,8 @@ const AppContent: React.FC = () => {
           </button>
         )}
       </nav>
+
+      <ThemeToggle isNewTheme={isNewTheme} onToggle={toggleTheme} />
     </div>
   );
 };
