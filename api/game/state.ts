@@ -1,21 +1,9 @@
 // api/game/state.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import * as fs from 'fs';
 
-// Путь к файлу с данными
+// Путь к файлу с данными (в /tmp для Vercel)
 const DATA_PATH = '/tmp/game_data.json';
-
-interface GameData {
-  roundNumber: number;
-  roundId: string;
-  players: Player[];
-  totalPoolTon: number;
-  totalPoolStars: number;
-  status: 'waiting' | 'active' | 'spinning' | 'finished';
-  winner?: Player;
-  timeLeft: number;
-  lastUpdated: number;
-  history: RoundHistory[];
-}
 
 interface Player {
   userId: number;
@@ -43,6 +31,19 @@ interface RoundHistory {
   timestamp: number;
 }
 
+interface GameData {
+  roundNumber: number;
+  roundId: string;
+  players: Player[];
+  totalPoolTon: number;
+  totalPoolStars: number;
+  status: 'waiting' | 'active' | 'spinning' | 'finished';
+  winner?: Player;
+  timeLeft: number;
+  lastUpdated: number;
+  history: RoundHistory[];
+}
+
 // Инициализация данных
 function getDefaultGameData(): GameData {
   return {
@@ -61,7 +62,6 @@ function getDefaultGameData(): GameData {
 // Чтение данных
 function readGameData(): GameData {
   try {
-    const fs = require('fs');
     if (fs.existsSync(DATA_PATH)) {
       const data = fs.readFileSync(DATA_PATH, 'utf8');
       return JSON.parse(data);
@@ -75,7 +75,6 @@ function readGameData(): GameData {
 // Запись данных
 function writeGameData(data: GameData): void {
   try {
-    const fs = require('fs');
     fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error writing game data:', error);
@@ -99,7 +98,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         data: {
           ...data,
-          // Не отправляем историю полностью, только последние 10 записей
           history: data.history.slice(-10),
         },
       });
@@ -122,7 +120,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           let player = data.players.find(p => p.userId === userId);
           
           if (player) {
-            // Добавляем ставку
             player.bets.push({ amount, currency, timestamp: Date.now() });
             player.totalBet += amount;
           } else {
@@ -192,12 +189,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           }
 
-          // Сохраняем победителя
           data.winner = winner;
           data.status = 'finished';
           data.lastUpdated = Date.now();
 
-          // Добавляем в историю
           data.history.push({
             roundNumber: data.roundNumber,
             roundId: data.roundId,
@@ -207,7 +202,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             timestamp: Date.now(),
           });
 
-          // Увеличиваем номер раунда
           data.roundNumber += 1;
           data.roundId = `round_${Date.now()}`;
           
@@ -217,7 +211,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         case 'reset': {
-          // Сбрасываем игру для нового раунда
           data.players = [];
           data.totalPoolTon = 0;
           data.totalPoolStars = 0;

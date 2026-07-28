@@ -14,6 +14,7 @@
     "@ton/core": "^0.63.1",
     "@ton/ton": "^14.0.0",
     "@tonconnect/ui-react": "^2.0.2",
+    "@vercel/node": "^2.15.10",
     "axios": "^1.16.1",
     "grammy": "^1.43.0",
     "react": "^18.3.1",
@@ -21,6 +22,7 @@
     "vite-plugin-node-polyfills": "^0.28.0"
   },
   "devDependencies": {
+    "@types/node": "^20.11.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
