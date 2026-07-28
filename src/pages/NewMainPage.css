@@ -5,53 +5,60 @@
   margin: 0 auto;
 }
 
-/* Header */
+/* Header - только название */
 .new-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 12px 0;
   margin-bottom: 16px;
 }
 
-.header-time {
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
 .header-title {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-primary);
+  letter-spacing: 1px;
 }
 
-.header-close {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 20px;
-  cursor: pointer;
-}
-
-/* Balance Block */
+/* Balance Block - TON и Stars */
 .balance-block {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 20px !important;
   margin-bottom: 16px;
 }
 
-.balance-amount {
-  font-size: 28px;
+.balance-row {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+}
+
+.balance-item {
+  text-align: center;
+}
+
+.balance-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.balance-value {
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
 }
 
+.balance-divider {
+  width: 1px;
+  background: var(--border-color);
+}
+
 .deposit-btn {
-  padding: 10px 24px !important;
-  font-size: 14px !important;
+  width: 100%;
+  padding: 12px !important;
 }
 
 /* Giveaway Block */
@@ -203,8 +210,8 @@
 
 /* Адаптивность */
 @media (max-width: 400px) {
-  .balance-amount {
-    font-size: 22px;
+  .balance-value {
+    font-size: 20px;
   }
   
   .games-grid {

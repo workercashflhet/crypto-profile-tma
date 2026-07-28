@@ -17,25 +17,26 @@ const GAMES: Game[] = [
 
 export const NewMainPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState('all');
-  // Используем _ для неиспользуемой переменной или добавляем логику
-  const [_balance, _setBalance] = useState(0);
-
-  // Или просто убираем неиспользуемый state:
-  // const [selectedGame, setSelectedGame] = useState('all');
 
   return (
     <div className="new-main-page">
-      {/* Header */}
+      {/* Header - только название */}
       <header className="new-header">
-        <span className="header-time">12:30</span>
-        <span className="header-title">mlbb</span>
-        <button className="header-close">✕</button>
+        <span className="header-title">Bets.</span>
       </header>
 
-      {/* Balance Block */}
+      {/* Balance Block - TON и Stars */}
       <div className="balance-block card">
-        <div className="balance-amount text-balance">
-          0.00 USDT
+        <div className="balance-row">
+          <div className="balance-item">
+            <span className="balance-label">TON</span>
+            <span className="balance-value">0.00</span>
+          </div>
+          <div className="balance-divider" />
+          <div className="balance-item">
+            <span className="balance-label">Stars</span>
+            <span className="balance-value">0</span>
+          </div>
         </div>
         <button className="btn-primary deposit-btn">
           Deposit

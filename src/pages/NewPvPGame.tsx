@@ -1,5 +1,7 @@
 // src/pages/NewPvPGame.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { usePvPGame } from '../hooks/usePvPGame';
+import LuckyWheel from '../components/LuckyWheel';
 import './NewPvPGame.css';
 
 const BALL_OPTIONS = [
@@ -12,87 +14,201 @@ const BALL_OPTIONS = [
 ];
 
 export const NewPvPGame: React.FC = () => {
+  const {
+    currentRound,
+    betAmount,
+    setBetAmount,
+    selectedCurrency,
+    setSelectedCurrency,
+    isSpinning,
+    rotationAngle,
+    winner,
+    error,
+    balance,
+    playerBets,
+    calculateSegments,
+    placeBet,
+    spinWheel,
+    getTotalPool,
+  } = usePvPGame();
+
+  const segments = calculateSegments();
+
+  useEffect(() => {
+    if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
+      spinWheel();
+    }
+  }, [currentRound?.status, isSpinning, spinWheel]);
+
   const [selectedBalls, setSelectedBalls] = useState<number>(1);
-  const [betAmount, setBetAmount] = useState<string>('1');
+
+  const handlePlaceBet = () => {
+    placeBet(betAmount, selectedCurrency);
+  };
+
+  const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
 
   return (
     <div className="new-pvp-page">
+      {/* Balance */}
+      <div className="pvp-balance card">
+        <div className="balance-row">
+          <div 
+            className={`balance-item ${selectedCurrency === 'ton' ? 'active' : ''}`}
+            onClick={() => setSelectedCurrency('ton')}
+          >
+            <span className="balance-label">TON</span>
+            <span className="balance-value">{balance.ton.toFixed(1)}</span>
+          </div>
+          <div className="balance-divider" />
+          <div 
+            className={`balance-item ${selectedCurrency === 'stars' ? 'active' : ''}`}
+            onClick={() => setSelectedCurrency('stars')}
+          >
+            <span className="balance-label">Stars</span>
+            <span className="balance-value">{balance.stars.toFixed(0)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && <div className="error-message">{error}</div>}
+
+      {/* Wheel */}
+      <div className="wheel-wrapper">
+        <LuckyWheel 
+          segments={segments} 
+          rotationAngle={rotationAngle} 
+          isSpinning={isSpinning}
+          timeLeft={currentRound?.timeLeft || 0}
+        />
+      </div>
+
       {/* Status */}
       <div className="pvp-status card">
-        <div className="status-indicator waiting">
+        <div className={`status-indicator ${currentRound?.status || 'waiting'}`}>
           <span className="status-dot" />
-          <span className="status-text">Waiting for players</span>
+          <span className="status-text">
+            {currentRound?.status === 'spinning' && '🎰 Spinning...'}
+            {currentRound?.status === 'finished' && '🏆 Round Finished!'}
+            {currentRound?.status === 'waiting' && '⏳ Waiting for players'}
+            {currentRound?.status === 'active' && '🎮 Game in progress'}
+          </span>
         </div>
         <div className="status-info">
           <div className="info-item">
             <span className="info-label">Prize pool</span>
-            <span className="info-value">250 TON</span>
+            <span className="info-value">{getTotalPool()}</span>
           </div>
           <div className="info-divider" />
           <div className="info-item">
-            <span className="info-label">Game #</span>
-            <span className="info-value">#0421</span>
+            <span className="info-label">Players</span>
+            <span className="info-value">{currentRound?.players.length || 0}</span>
+          </div>
+          <div className="info-divider" />
+          <div className="info-item">
+            <span className="info-label">Round</span>
+            <span className="info-value">#{currentRound?.id.slice(-4) || '----'}</span>
           </div>
         </div>
       </div>
 
-      {/* Bet Input */}
-      <div className="bet-section card">
-        <div className="bet-input-group">
-          <input
-            type="number"
-            className="bet-input"
-            value={betAmount}
-            onChange={(e) => setBetAmount(e.target.value)}
-            placeholder="Enter amount"
-          />
-          <button className="btn-primary play-btn">Play</button>
-        </div>
-      </div>
-
-      {/* Ball Options */}
-      <div className="ball-options card">
-        <h3>Select Balls</h3>
-        <div className="balls-grid">
-          {BALL_OPTIONS.map((option) => (
+      {/* Bet Section */}
+      {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
+        <div className="bet-section card">
+          <div className="currency-toggle">
             <button
-              key={option.value}
-              className={`ball-option ${selectedBalls === option.value ? 'active' : ''}`}
-              onClick={() => setSelectedBalls(option.value)}
+              className={`currency-btn ${selectedCurrency === 'ton' ? 'active' : ''}`}
+              onClick={() => setSelectedCurrency('ton')}
             >
-              <span className="ball-number">{option.value}</span>
-              <span className="ball-price">{option.price} USDT</span>
+              <img src="/ton.png" alt="TON" className="currency-icon" />
+              TON
             </button>
-          ))}
-        </div>
-      </div>
+            <button
+              className={`currency-btn ${selectedCurrency === 'stars' ? 'active' : ''}`}
+              onClick={() => setSelectedCurrency('stars')}
+            >
+              <img src="/stars.png" alt="Stars" className="currency-icon" />
+              Stars
+            </button>
+          </div>
 
-      {/* Active Players */}
-      <div className="active-players card">
-        <h3>🎮 Active Players</h3>
-        <div className="players-list">
-          <div className="player-item">
-            <div className="player-avatar">🐋</div>
-            <div className="player-info">
-              <span className="player-name">crypto_whale</span>
-              <span className="player-bet">150 TON</span>
-            </div>
+          <div className="bet-input-group">
+            <input
+              type="number"
+              className="bet-input"
+              value={betAmount || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '') setBetAmount(0);
+                else {
+                  const parsed = parseInt(value.replace(/^0+/, ''), 10);
+                  if (!isNaN(parsed)) setBetAmount(parsed);
+                }
+              }}
+              placeholder="Enter amount"
+              min="1"
+              max={maxBet}
+            />
+            <button 
+              className="btn-primary play-btn"
+              onClick={handlePlaceBet}
+              disabled={betAmount > maxBet || betAmount <= 0}
+            >
+              Play
+            </button>
           </div>
-          <div className="player-item">
-            <div className="player-avatar">🦊</div>
-            <div className="player-info">
-              <span className="player-name">fox_trader</span>
-              <span className="player-bet">75 TON</span>
-            </div>
-          </div>
-          <div className="player-item">
-            <div className="player-avatar">🐉</div>
-            <div className="player-info">
-              <span className="player-name">dragon_king</span>
-              <span className="player-bet">200 TON</span>
-            </div>
+
+          <div className="ball-options">
+            {BALL_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                className={`ball-option ${selectedBalls === option.value ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedBalls(option.value);
+                  setBetAmount(option.value);
+                }}
+              >
+                <span className="ball-number">{option.value}</span>
+                <span className="ball-price">{option.price} USDT</span>
+              </button>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* Winner */}
+      {winner && (
+        <div className="winner-section card">
+          <div className="winner-avatar">
+            {winner.avatar ? (
+              <img src={winner.avatar} alt={winner.firstName} />
+            ) : (
+              <span className="winner-emoji">👑</span>
+            )}
+          </div>
+          <div className="winner-info">
+            <span className="winner-name">{winner.firstName} wins!</span>
+            <span className="winner-prize">{getTotalPool()}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Players List */}
+      <div className="players-list card">
+        <h3>🎮 Players</h3>
+        {currentRound?.players.map((player, index) => (
+          <div key={index} className="player-item">
+            <div className="player-color" style={{ backgroundColor: player.color }} />
+            <span className="player-name">{player.firstName}</span>
+            <span className="player-bet">
+              {player.bets.map(b => `${b.amount} ${b.currency}`).join(' + ')}
+            </span>
+          </div>
+        ))}
+        {(!currentRound?.players || currentRound.players.length === 0) && (
+          <div className="no-players">No players yet. Be the first!</div>
+        )}
       </div>
     </div>
   );
