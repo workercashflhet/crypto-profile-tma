@@ -1,6 +1,7 @@
 // src/pages/NewPvPGame.tsx
 import React, { useState, useEffect } from 'react';
-import { usePvPGame } from '../hooks/usePvPGame';
+import { useGameAPI } from '../hooks/useGameAPI';
+import { useGameBalance } from '../hooks/useGameBalance';
 import LuckyWheel from '../components/LuckyWheel';
 import './NewPvPGame.css';
 
@@ -14,65 +15,112 @@ const BALL_OPTIONS = [
 ];
 
 export const NewPvPGame: React.FC = () => {
-  const {
-    currentRound,
-    betAmount,
-    setBetAmount,
-    selectedCurrency,
-    setSelectedCurrency,
-    isSpinning,
-    rotationAngle,
-    winner,
-    error,
-    balance,
-    calculateSegments,
-    placeBet,
-    spinWheel,
-  } = usePvPGame();
-
-  const segments = calculateSegments();
-
-  useEffect(() => {
-    if (currentRound?.status === 'spinning' && currentRound.players.length > 0 && !isSpinning) {
-      spinWheel();
-    }
-  }, [currentRound?.status, isSpinning, spinWheel]);
-
+  const { gameState, isLoading, error, placeBet, spinWheel, resetGame } = useGameAPI();
+  const { balance, withdrawTon, withdrawStars, depositTon, depositStars } = useGameBalance();
+  
+  const [betAmount, setBetAmount] = useState<number>(1);
+  const [selectedCurrency, setSelectedCurrency] = useState<'ton' | 'stars'>('ton');
   const [selectedBalls, setSelectedBalls] = useState<number>(1);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [rotationAngle, setRotationAngle] = useState(0);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handlePlaceBet = () => {
-    placeBet(betAmount, selectedCurrency);
+  // Эффект для автоматического вращения
+  useEffect(() => {
+    if (gameState?.status === 'spinning' && !isSpinning) {
+      setIsSpinning(true);
+      // Симулируем вращение
+      const spinDuration = 5000;
+      const targetAngle = 360 * 8 + Math.random() * 360;
+      setRotationAngle(targetAngle);
+      
+      setTimeout(() => {
+        setIsSpinning(false);
+        // После вращения обновляем состояние
+        spinWheel();
+      }, spinDuration);
+    }
+  }, [gameState?.status, isSpinning, spinWheel]);
+
+  // Автоматический сброс после завершения
+  useEffect(() => {
+    if (gameState?.status === 'finished') {
+      const timeout = setTimeout(() => {
+        resetGame();
+      }, 10000);
+      return () => clearTimeout(timeout);
+    }
+  }, [gameState?.status, resetGame]);
+
+  const handlePlaceBet = async () => {
+    if (!gameState) {
+      setLocalError('Game not available');
+      return;
+    }
+
+    if (gameState.status === 'spinning' || gameState.status === 'finished') {
+      setLocalError('Game is not active');
+      return;
+    }
+
+    if (betAmount <= 0) {
+      setLocalError('Amount must be greater than 0');
+      return;
+    }
+
+    // Проверяем баланс
+    if (selectedCurrency === 'ton') {
+      if (balance.ton < betAmount) {
+        setLocalError(`Insufficient TON balance. You have ${balance.ton.toFixed(1)} TON`);
+        return;
+      }
+      withdrawTon(betAmount);
+    } else {
+      if (balance.stars < betAmount) {
+        setLocalError(`Insufficient Stars balance. You have ${balance.stars.toFixed(0)} Stars`);
+        return;
+      }
+      withdrawStars(betAmount);
+    }
+
+    // Отправляем ставку на сервер
+    const success = await placeBet(betAmount, selectedCurrency);
+    
+    if (success) {
+      setLocalError(null);
+      // Сбрасываем ошибку через 3 секунды
+      setTimeout(() => setLocalError(null), 3000);
+    } else {
+      // Возвращаем средства при ошибке
+      if (selectedCurrency === 'ton') {
+        depositTon(betAmount);
+      } else {
+        depositStars(betAmount);
+      }
+    }
   };
 
-  const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
-
-  // Функция для форматирования пула с иконками
   const formatPool = () => {
-    if (!currentRound) return '0';
+    if (!gameState) return '0';
     
-    const parts: (string | React.ReactNode)[] = [];
+    const parts: React.ReactNode[] = [];
     
-    if (currentRound.totalPoolTon > 0) {
-      parts.push(`${currentRound.totalPoolTon} TON`);
+    if (gameState.totalPoolTon > 0) {
+      parts.push(<span key="ton">{gameState.totalPoolTon} TON</span>);
     }
     
-    if (currentRound.totalPoolStars > 0) {
+    if (gameState.totalPoolStars > 0) {
       parts.push(
         <span key="stars" className="pool-stars">
-          {currentRound.totalPoolStars}
+          {gameState.totalPoolStars}
           <img src="/stars.png" alt="Stars" className="pool-star-icon" />
         </span>
       );
     }
     
     if (parts.length === 0) return '0';
+    if (parts.length === 1) return parts[0];
     
-    // Соединяем части с разделителем
-    if (parts.length === 1) {
-      return parts[0];
-    }
-    
-    // Если есть обе валюты, соединяем с +
     return (
       <span className="pool-display">
         {parts.map((part, index) => (
@@ -84,6 +132,35 @@ export const NewPvPGame: React.FC = () => {
       </span>
     );
   };
+
+  const getStatusText = () => {
+    if (!gameState) return 'Loading...';
+    switch (gameState.status) {
+      case 'spinning': return '🎰 Spinning...';
+      case 'finished': return '🏆 Round Finished!';
+      case 'waiting': return '⏳ Waiting for players';
+      case 'active': return '🎮 Game in progress';
+      default: return 'Loading...';
+    }
+  };
+
+  const getStatusDotClass = () => {
+    if (!gameState) return 'waiting';
+    return gameState.status;
+  };
+
+  // Проверка, можно ли делать ставку
+  const canPlaceBet = (): boolean => {
+    if (!gameState) return false;
+    return gameState.status !== 'finished' && gameState.status !== 'spinning';
+  };
+
+  const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
+  const displayError = error || localError;
+
+  if (isLoading) {
+    return <div className="new-pvp-page">Loading game...</div>;
+  }
 
   return (
     <div className="new-pvp-page">
@@ -109,28 +186,29 @@ export const NewPvPGame: React.FC = () => {
       </div>
 
       {/* Error */}
-      {error && <div className="error-message">{error}</div>}
+      {displayError && <div className="error-message">{displayError}</div>}
 
       {/* Wheel */}
       <div className="wheel-wrapper">
         <LuckyWheel 
-          segments={segments} 
+          segments={gameState?.players.map(p => ({
+            color: p.color,
+            percentage: 0,
+            player: p,
+            startAngle: 0,
+            endAngle: 360,
+          })) || []} 
           rotationAngle={rotationAngle} 
           isSpinning={isSpinning}
-          timeLeft={currentRound?.timeLeft || 0}
+          timeLeft={gameState?.timeLeft || 0}
         />
       </div>
 
       {/* Status */}
       <div className="pvp-status card">
-        <div className={`status-indicator ${currentRound?.status || 'waiting'}`}>
+        <div className={`status-indicator ${getStatusDotClass()}`}>
           <span className="status-dot" />
-          <span className="status-text">
-            {currentRound?.status === 'spinning' && '🎰 Spinning...'}
-            {currentRound?.status === 'finished' && '🏆 Round Finished!'}
-            {currentRound?.status === 'waiting' && '⏳ Waiting for players'}
-            {currentRound?.status === 'active' && '🎮 Game in progress'}
-          </span>
+          <span className="status-text">{getStatusText()}</span>
         </div>
         <div className="status-info">
           <div className="info-item">
@@ -140,18 +218,18 @@ export const NewPvPGame: React.FC = () => {
           <div className="info-divider" />
           <div className="info-item">
             <span className="info-label">Players</span>
-            <span className="info-value">{currentRound?.players.length || 0}</span>
+            <span className="info-value">{gameState?.players.length || 0}</span>
           </div>
           <div className="info-divider" />
           <div className="info-item">
             <span className="info-label">Round</span>
-            <span className="info-value">#{currentRound?.id.slice(-4) || '----'}</span>
+            <span className="info-value">#{gameState?.roundNumber || '----'}</span>
           </div>
         </div>
       </div>
 
       {/* Bet Section */}
-      {currentRound?.status !== 'finished' && currentRound?.status !== 'spinning' && (
+      {canPlaceBet() && (
         <div className="bet-section card">
           <div className="currency-toggle">
             <button
@@ -190,7 +268,7 @@ export const NewPvPGame: React.FC = () => {
             <button 
               className="btn-primary play-btn"
               onClick={handlePlaceBet}
-              disabled={betAmount > maxBet || betAmount <= 0}
+              disabled={betAmount > maxBet || betAmount <= 0 || !canPlaceBet()}
             >
               Play
             </button>
@@ -215,17 +293,17 @@ export const NewPvPGame: React.FC = () => {
       )}
 
       {/* Winner */}
-      {winner && (
+      {gameState?.winner && (
         <div className="winner-section card">
           <div className="winner-avatar">
-            {winner.avatar ? (
-              <img src={winner.avatar} alt={winner.firstName} />
+            {gameState.winner.avatar ? (
+              <img src={gameState.winner.avatar} alt={gameState.winner.firstName} />
             ) : (
               <span className="winner-emoji">👑</span>
             )}
           </div>
           <div className="winner-info">
-            <span className="winner-name">{winner.firstName} wins!</span>
+            <span className="winner-name">{gameState.winner.firstName} wins!</span>
             <span className="winner-prize">{formatPool()}</span>
           </div>
         </div>
@@ -234,7 +312,7 @@ export const NewPvPGame: React.FC = () => {
       {/* Players List */}
       <div className="players-list card">
         <h3>🎮 Players</h3>
-        {currentRound?.players.map((player, index) => (
+        {gameState?.players.map((player, index) => (
           <div key={index} className="player-item">
             <div className="player-color" style={{ backgroundColor: player.color }} />
             <span className="player-name">{player.firstName}</span>
@@ -243,7 +321,7 @@ export const NewPvPGame: React.FC = () => {
             </span>
           </div>
         ))}
-        {(!currentRound?.players || currentRound.players.length === 0) && (
+        {(!gameState?.players || gameState.players.length === 0) && (
           <div className="no-players">No players yet. Be the first!</div>
         )}
       </div>
