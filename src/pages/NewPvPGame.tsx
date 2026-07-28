@@ -25,7 +25,7 @@ export const NewPvPGame: React.FC = () => {
     winner,
     error,
     balance,
-    playerBets,
+    // playerBets убираем, так как не используется
     calculateSegments,
     placeBet,
     spinWheel,
