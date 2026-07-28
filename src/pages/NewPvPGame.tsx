@@ -15,9 +15,24 @@ const BALL_OPTIONS = [
   { value: 500, price: 150 },
 ];
 
+// Fallback game state с полем winner
+const FALLBACK_GAME_STATE = {
+  roundNumber: 1,
+  roundId: 'round_0',
+  players: [],
+  totalPoolTon: 0,
+  totalPoolStars: 0,
+  status: 'waiting' as const,
+  timeLeft: 30,
+  lastUpdated: Date.now(),
+  timerStarted: false,
+  history: [],
+  winner: undefined, // Добавляем winner
+};
+
 export const NewPvPGame: React.FC = () => {
   const { gameState: sseGameState, isConnected, error: sseError } = useSSE();
-  const { placeBet, spinWheel, resetGame } = useGameAPI();
+  const { placeBet, spinWheel, resetGame, fetchGameState } = useGameAPI();
   const { balance, withdrawTon, withdrawStars, depositTon, depositStars } = useGameBalance();
   
   const [betAmount, setBetAmount] = useState<number>(1);
@@ -26,8 +41,20 @@ export const NewPvPGame: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const gameState = sseGameState;
+  // Используем SSE состояние или fallback
+  const gameState = sseGameState || FALLBACK_GAME_STATE;
+
+  // Загружаем данные при монтировании
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      await fetchGameState();
+      setIsLoading(false);
+    };
+    loadData();
+  }, [fetchGameState]);
 
   useEffect(() => {
     if (gameState?.status === 'spinning' && !isSpinning) {
@@ -150,13 +177,11 @@ export const NewPvPGame: React.FC = () => {
     return gameState.status;
   };
 
-  // Панель ставок видна всегда, кроме момента вращения
   const showBetPanel = () => {
     if (!gameState) return true;
     return gameState.status !== 'spinning';
   };
 
-  // Кнопка Play активна только когда можно делать ставку
   const isPlayDisabled = () => {
     if (!gameState) return false;
     if (gameState.status === 'spinning') return true;
@@ -170,6 +195,17 @@ export const NewPvPGame: React.FC = () => {
   const displayError = localError || sseError;
 
   const connectionStatus = isConnected ? '🟢 Live' : '🔴 Offline';
+
+  if (isLoading) {
+    return (
+      <div className="new-pvp-page">
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p>Loading game...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="new-pvp-page">
@@ -211,7 +247,7 @@ export const NewPvPGame: React.FC = () => {
       {/* Wheel */}
       <div className="wheel-wrapper">
         <LuckyWheel 
-          segments={gameState?.players.map((p: any) => ({
+          segments={gameState?.players?.map((p: any) => ({
             color: p.color,
             percentage: 0,
             player: p,
@@ -238,7 +274,7 @@ export const NewPvPGame: React.FC = () => {
           <div className="info-divider" />
           <div className="info-item">
             <span className="info-label">Players</span>
-            <span className="info-value">{gameState?.players.length || 0}</span>
+            <span className="info-value">{gameState?.players?.length || 0}</span>
           </div>
           <div className="info-divider" />
           <div className="info-item">
@@ -248,7 +284,7 @@ export const NewPvPGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Bet Section - всегда видна, кроме момента вращения */}
+      {/* Bet Section */}
       {showBetPanel() && (
         <div className="bet-section card">
           <div className="currency-toggle">
@@ -303,7 +339,7 @@ export const NewPvPGame: React.FC = () => {
                   setSelectedBalls(option.value);
                   setBetAmount(option.value);
                 }}
-                disabled={gameState?.status === 'finished'}
+                disabled={gameState?.status === 'finished' || gameState?.status === 'spinning'}
               >
                 <span className="ball-number">{option.value}</span>
                 <span className="ball-price">{option.price} USDT</span>
@@ -319,10 +355,10 @@ export const NewPvPGame: React.FC = () => {
           )}
           {gameState?.status === 'waiting' && (
             <div className="game-status-info">
-              👥 Need {2 - (gameState?.players?.length || 0)} more player(s) to start
+              👥 Need {Math.max(0, 2 - (gameState?.players?.length || 0))} more player(s) to start
             </div>
           )}
-          {gameState?.status === 'active' && gameState?.timerStarted && (
+          {gameState?.status === 'active' && (
             <div className="game-status-info">
               ⏱️ Round ends in {gameState?.timeLeft || 0}s
             </div>
@@ -358,12 +394,12 @@ export const NewPvPGame: React.FC = () => {
       {/* Players List */}
       <div className="players-list card">
         <h3>🎮 Players</h3>
-        {gameState?.players.map((player: any, index: number) => (
+        {gameState?.players?.map((player: any, index: number) => (
           <div key={index} className="player-item">
             <div className="player-color" style={{ backgroundColor: player.color }} />
             <span className="player-name">{player.firstName}</span>
             <span className="player-bet">
-              {player.bets.map((b: any) => `${b.amount} ${b.currency}`).join(' + ')}
+              {player.bets?.map((b: any) => `${b.amount} ${b.currency}`).join(' + ') || '0'}
             </span>
           </div>
         ))}
