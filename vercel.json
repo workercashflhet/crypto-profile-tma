@@ -1,7 +1,7 @@
 {
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "functions": {
-    "api/create-invoice.js": {
+    "api/game/state.js": {
       "memory": 128,
       "maxDuration": 10
     }
