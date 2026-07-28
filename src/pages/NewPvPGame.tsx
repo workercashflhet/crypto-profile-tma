@@ -28,7 +28,7 @@ export const NewPvPGame: React.FC = () => {
     calculateSegments,
     placeBet,
     spinWheel,
-    getTotalPool,
+    // getTotalPool - убираем, так как не используем
   } = usePvPGame();
 
   const segments = calculateSegments();
