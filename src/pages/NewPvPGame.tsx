@@ -25,7 +25,6 @@ export const NewPvPGame: React.FC = () => {
     winner,
     error,
     balance,
-    // playerBets убираем, так как не используется
     calculateSegments,
     placeBet,
     spinWheel,
@@ -47,6 +46,19 @@ export const NewPvPGame: React.FC = () => {
   };
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
+
+  // Функция для форматирования пула с иконками
+  const formatPool = () => {
+    if (!currentRound) return '0';
+    const parts: string[] = [];
+    if (currentRound.totalPoolTon > 0) {
+      parts.push(`${currentRound.totalPoolTon} TON`);
+    }
+    if (currentRound.totalPoolStars > 0) {
+      parts.push(`${currentRound.totalPoolStars} ⭐`);
+    }
+    return parts.join(' + ') || '0';
+  };
 
   return (
     <div className="new-pvp-page">
@@ -98,7 +110,7 @@ export const NewPvPGame: React.FC = () => {
         <div className="status-info">
           <div className="info-item">
             <span className="info-label">Prize pool</span>
-            <span className="info-value">{getTotalPool()}</span>
+            <span className="info-value">{formatPool()}</span>
           </div>
           <div className="info-divider" />
           <div className="info-item">
@@ -189,7 +201,7 @@ export const NewPvPGame: React.FC = () => {
           </div>
           <div className="winner-info">
             <span className="winner-name">{winner.firstName} wins!</span>
-            <span className="winner-prize">{getTotalPool()}</span>
+            <span className="winner-prize">{formatPool()}</span>
           </div>
         </div>
       )}
