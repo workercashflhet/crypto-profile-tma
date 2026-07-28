@@ -9,7 +9,8 @@ import { NewMainPage } from './pages/NewMainPage';
 import { ThemeToggle } from './components/ThemeToggle';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import './App.css';
-import './styles/newTheme.css';
+// Исправленный путь - убираем styles/
+import './theme/newTheme.css';
 
 const manifestUrl = 'https://raw.githubusercontent.com/workercashflhet/crypto-profile-tma/main/public/tonconnect-manifest.json';
 
