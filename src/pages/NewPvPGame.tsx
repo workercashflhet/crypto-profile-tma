@@ -49,10 +49,13 @@ export const NewPvPGame: React.FC = () => {
   // Функция для форматирования пула с иконками
   const formatPool = () => {
     if (!currentRound) return '0';
-    const parts: string[] = [];
+    
+    const parts: (string | React.ReactNode)[] = [];
+    
     if (currentRound.totalPoolTon > 0) {
       parts.push(`${currentRound.totalPoolTon} TON`);
     }
+    
     if (currentRound.totalPoolStars > 0) {
       parts.push(
         <span key="stars" className="pool-stars">
@@ -61,21 +64,25 @@ export const NewPvPGame: React.FC = () => {
         </span>
       );
     }
+    
     if (parts.length === 0) return '0';
     
     // Соединяем части с разделителем
-    const result: React.ReactNode[] = [];
-    parts.forEach((part, index) => {
-      if (typeof part === 'string') {
-        result.push(<span key={`part-${index}`}>{part}</span>);
-      } else {
-        result.push(part);
-      }
-      if (index < parts.length - 1) {
-        result.push(<span key={`plus-${index}`} className="pool-plus"> + </span>);
-      }
-    });
-    return result;
+    if (parts.length === 1) {
+      return parts[0];
+    }
+    
+    // Если есть обе валюты, соединяем с +
+    return (
+      <span className="pool-display">
+        {parts.map((part, index) => (
+          <React.Fragment key={index}>
+            {part}
+            {index < parts.length - 1 && <span className="pool-plus"> + </span>}
+          </React.Fragment>
+        ))}
+      </span>
+    );
   };
 
   return (

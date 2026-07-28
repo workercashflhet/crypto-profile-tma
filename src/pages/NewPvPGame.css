@@ -335,18 +335,39 @@
   50% { opacity: 0.5; }
 }
 
-/* src/pages/NewPvPGame.css - добавляем стиль для иконки звезды в пуле */
+/* src/pages/NewPvPGame.css - добавляем в конец файла */
+
+/* Стили для пула с иконкой звезды */
+.pool-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.pool-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pool-star-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.pool-plus {
+  margin: 0 4px;
+  color: var(--text-secondary);
+}
+
 .info-value {
   font-size: 14px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.info-value .star-icon {
-  width: 16px;
-  height: 16px;
-  vertical-align: middle;
-  display: inline-block;
+  flex-wrap: wrap;
 }
