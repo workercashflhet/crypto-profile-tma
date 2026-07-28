@@ -16,7 +16,6 @@ const BALL_OPTIONS = [
 ];
 
 export const NewPvPGame: React.FC = () => {
-  // Используем SSE для реального времени
   const { gameState: sseGameState, isConnected, error: sseError } = useSSE();
   const { placeBet, spinWheel, resetGame } = useGameAPI();
   const { balance, withdrawTon, withdrawStars, depositTon, depositStars } = useGameBalance();
@@ -28,10 +27,8 @@ export const NewPvPGame: React.FC = () => {
   const [rotationAngle, setRotationAngle] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
   
-  // Используем состояние из SSE, если доступно
   const gameState = sseGameState;
 
-  // Эффект для автоматического вращения
   useEffect(() => {
     if (gameState?.status === 'spinning' && !isSpinning) {
       setIsSpinning(true);
@@ -46,7 +43,6 @@ export const NewPvPGame: React.FC = () => {
     }
   }, [gameState?.status, isSpinning, spinWheel]);
 
-  // Автоматический сброс после завершения
   useEffect(() => {
     if (gameState?.status === 'finished') {
       const timeout = setTimeout(() => {
@@ -62,8 +58,13 @@ export const NewPvPGame: React.FC = () => {
       return;
     }
 
-    if (gameState.status === 'spinning' || gameState.status === 'finished') {
-      setLocalError('Game is not active');
+    if (gameState.status === 'spinning') {
+      setLocalError('Game is spinning, please wait');
+      return;
+    }
+
+    if (gameState.status === 'finished') {
+      setLocalError('Round finished, new round starting...');
       return;
     }
 
@@ -72,7 +73,6 @@ export const NewPvPGame: React.FC = () => {
       return;
     }
 
-    // Проверяем баланс
     if (selectedCurrency === 'ton') {
       if (balance.ton < betAmount) {
         setLocalError(`Insufficient TON balance. You have ${balance.ton.toFixed(1)} TON`);
@@ -93,7 +93,6 @@ export const NewPvPGame: React.FC = () => {
       setLocalError(null);
       setTimeout(() => setLocalError(null), 3000);
     } else {
-      // Возвращаем средства при ошибке
       if (selectedCurrency === 'ton') {
         depositTon(betAmount);
       } else {
@@ -151,16 +150,25 @@ export const NewPvPGame: React.FC = () => {
     return gameState.status;
   };
 
-  // Проверка, можно ли делать ставку
-  const canPlaceBet = (): boolean => {
+  // Панель ставок видна всегда, кроме момента вращения
+  const showBetPanel = () => {
+    if (!gameState) return true;
+    return gameState.status !== 'spinning';
+  };
+
+  // Кнопка Play активна только когда можно делать ставку
+  const isPlayDisabled = () => {
     if (!gameState) return false;
-    return gameState.status !== 'finished' && gameState.status !== 'spinning';
+    if (gameState.status === 'spinning') return true;
+    if (gameState.status === 'finished') return true;
+    if (betAmount > maxBet) return true;
+    if (betAmount <= 0) return true;
+    return false;
   };
 
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
   const displayError = localError || sseError;
 
-  // Индикатор соединения
   const connectionStatus = isConnected ? '🟢 Live' : '🔴 Offline';
 
   return (
@@ -240,8 +248,8 @@ export const NewPvPGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Bet Section */}
-      {canPlaceBet() && (
+      {/* Bet Section - всегда видна, кроме момента вращения */}
+      {showBetPanel() && (
         <div className="bet-section card">
           <div className="currency-toggle">
             <button
@@ -280,9 +288,9 @@ export const NewPvPGame: React.FC = () => {
             <button 
               className="btn-primary play-btn"
               onClick={handlePlaceBet}
-              disabled={betAmount > maxBet || betAmount <= 0 || !canPlaceBet()}
+              disabled={isPlayDisabled()}
             >
-              Play
+              {gameState?.status === 'finished' ? 'New Round...' : 'Play'}
             </button>
           </div>
 
@@ -295,12 +303,38 @@ export const NewPvPGame: React.FC = () => {
                   setSelectedBalls(option.value);
                   setBetAmount(option.value);
                 }}
+                disabled={gameState?.status === 'finished'}
               >
                 <span className="ball-number">{option.value}</span>
                 <span className="ball-price">{option.price} USDT</span>
               </button>
             ))}
           </div>
+          
+          {/* Информация о статусе игры */}
+          {gameState?.status === 'finished' && (
+            <div className="game-status-info">
+              ⏳ New round starting soon...
+            </div>
+          )}
+          {gameState?.status === 'waiting' && (
+            <div className="game-status-info">
+              👥 Need {2 - (gameState?.players?.length || 0)} more player(s) to start
+            </div>
+          )}
+          {gameState?.status === 'active' && gameState?.timerStarted && (
+            <div className="game-status-info">
+              ⏱️ Round ends in {gameState?.timeLeft || 0}s
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Spinning overlay */}
+      {gameState?.status === 'spinning' && (
+        <div className="spinning-overlay card">
+          <div className="spinning-text">🎰 Spinning...</div>
+          <div className="spinning-subtext">Good luck everyone!</div>
         </div>
       )}
 

@@ -38,6 +38,7 @@ export interface GameState {
   winner?: Player;
   timeLeft: number;
   lastUpdated: number;
+  timerStarted: boolean; // Добавляем поле
   history: RoundHistory[];
 }
 
@@ -65,7 +66,12 @@ export const useGameAPI = () => {
       const result = await response.json();
       
       if (result.success) {
-        setGameState(result.data);
+        // Убеждаемся, что timerStarted есть
+        const data = result.data;
+        if (data.timerStarted === undefined) {
+          data.timerStarted = false;
+        }
+        setGameState(data);
         setError(null);
       } else {
         setError(result.error || 'Failed to load game state');
@@ -106,7 +112,11 @@ export const useGameAPI = () => {
       const result = await response.json();
       
       if (result.success) {
-        setGameState(result.data);
+        const data = result.data;
+        if (data.timerStarted === undefined) {
+          data.timerStarted = false;
+        }
+        setGameState(data);
         setError(null);
         return true;
       } else {
@@ -133,7 +143,11 @@ export const useGameAPI = () => {
       const result = await response.json();
       
       if (result.success) {
-        setGameState(result.data);
+        const data = result.data;
+        if (data.timerStarted === undefined) {
+          data.timerStarted = false;
+        }
+        setGameState(data);
         setError(null);
         return result.data.winner;
       } else {
@@ -160,7 +174,11 @@ export const useGameAPI = () => {
       const result = await response.json();
       
       if (result.success) {
-        setGameState(result.data);
+        const data = result.data;
+        if (data.timerStarted === undefined) {
+          data.timerStarted = false;
+        }
+        setGameState(data);
         setError(null);
         return true;
       } else {
@@ -195,13 +213,12 @@ export const useGameAPI = () => {
     }
   }, []);
 
-  // Автоматическое обновление состояния каждую секунду
   useEffect(() => {
     fetchGameState();
     
     const interval = setInterval(() => {
       fetchGameState();
-    }, 1000); // Обновляем каждую секунду для точного таймера
+    }, 1000);
     
     return () => clearInterval(interval);
   }, [fetchGameState]);
