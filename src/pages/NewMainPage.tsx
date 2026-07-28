@@ -17,7 +17,11 @@ const GAMES: Game[] = [
 
 export const NewMainPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState('all');
-  const [balance, setBalance] = useState(0);
+  // Используем _ для неиспользуемой переменной или добавляем логику
+  const [_balance, _setBalance] = useState(0);
+
+  // Или просто убираем неиспользуемый state:
+  // const [selectedGame, setSelectedGame] = useState('all');
 
   return (
     <div className="new-main-page">
@@ -31,7 +35,7 @@ export const NewMainPage: React.FC = () => {
       {/* Balance Block */}
       <div className="balance-block card">
         <div className="balance-amount text-balance">
-          {balance.toFixed(2)} USDT
+          0.00 USDT
         </div>
         <button className="btn-primary deposit-btn">
           Deposit
