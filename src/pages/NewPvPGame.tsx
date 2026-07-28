@@ -28,7 +28,6 @@ export const NewPvPGame: React.FC = () => {
     calculateSegments,
     placeBet,
     spinWheel,
-    // getTotalPool - убираем, так как не используем
   } = usePvPGame();
 
   const segments = calculateSegments();
@@ -55,9 +54,28 @@ export const NewPvPGame: React.FC = () => {
       parts.push(`${currentRound.totalPoolTon} TON`);
     }
     if (currentRound.totalPoolStars > 0) {
-      parts.push(`${currentRound.totalPoolStars} ⭐`);
+      parts.push(
+        <span key="stars" className="pool-stars">
+          {currentRound.totalPoolStars}
+          <img src="/stars.png" alt="Stars" className="pool-star-icon" />
+        </span>
+      );
     }
-    return parts.join(' + ') || '0';
+    if (parts.length === 0) return '0';
+    
+    // Соединяем части с разделителем
+    const result: React.ReactNode[] = [];
+    parts.forEach((part, index) => {
+      if (typeof part === 'string') {
+        result.push(<span key={`part-${index}`}>{part}</span>);
+      } else {
+        result.push(part);
+      }
+      if (index < parts.length - 1) {
+        result.push(<span key={`plus-${index}`} className="pool-plus"> + </span>);
+      }
+    });
+    return result;
   };
 
   return (
