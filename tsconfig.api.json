@@ -1,0 +1,18 @@
+// tsconfig.api.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "lib": ["ES2020"],
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "outDir": "api-dist",
+    "rootDir": "api"
+  },
+  "include": ["api/**/*"],
+  "exclude": ["node_modules", "src"]
+}
