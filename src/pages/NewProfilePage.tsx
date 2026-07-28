@@ -10,7 +10,8 @@ export const NewProfilePage: React.FC = () => {
   const { user } = useTelegramUser();
   const { balance } = useGameBalance();
   const [activeTab, setActiveTab] = useState<ProfileTab>('promocodes');
-  const [showDeposit, setShowDeposit] = useState(false);
+  // Убираем неиспользуемую переменную или добавляем _ перед именем
+  // const [_showDeposit, _setShowDeposit] = useState(false);
 
   // Инвентарь
   const inventory = [
@@ -56,9 +57,7 @@ export const NewProfilePage: React.FC = () => {
           </div>
         </div>
         <div className="balance-actions">
-          <button className="btn-primary" onClick={() => setShowDeposit(true)}>
-            Deposit
-          </button>
+          <button className="btn-primary">Deposit</button>
           <button className="btn-secondary">Withdraw</button>
         </div>
       </div>
