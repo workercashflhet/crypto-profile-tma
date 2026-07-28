@@ -1,35 +1,30 @@
 // src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import UserProfile from './components/UserProfile';
-import WalletConnect from './components/WalletConnect';
-import PvPGame from './components/PvPGame';
-import AdminPanel from './components/AdminPanel';
 import { NewMainPage } from './pages/NewMainPage';
+import { NewProfilePage } from './pages/NewProfilePage';
+import { NewPvPGame } from './pages/NewPvPGame';
+import { NewLeaderboard } from './pages/NewLeaderboard';
+import { NewSettings } from './pages/NewSettings';
 import { ThemeToggle } from './components/ThemeToggle';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import './App.css';
-// Исправленный путь - убираем styles/
 import './theme/newTheme.css';
 
 const manifestUrl = 'https://raw.githubusercontent.com/workercashflhet/crypto-profile-tma/main/public/tonconnect-manifest.json';
 
-type Tab = 'pvp' | 'profile' | 'admin' | 'new';
+type Tab = 'home' | 'pvp' | 'profile' | 'leaderboard' | 'settings';
 
 const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('new');
+  const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isNewTheme, setIsNewTheme] = useState(true);
   const { user, isLoading } = useTelegramUser();
 
   useEffect(() => {
     if (user) {
       console.log('Current user:', user);
-      console.log('User ID:', user.id);
-      console.log('Is Admin (479243932)?', user.id === 479243932);
     }
   }, [user]);
-
-  const isAdmin = user?.id === 479243932;
 
   const toggleTheme = () => {
     setIsNewTheme(!isNewTheme);
@@ -40,27 +35,33 @@ const AppContent: React.FC = () => {
     return <div className="app">Loading...</div>;
   }
 
+  const renderPage = () => {
+    switch (activeTab) {
+      case 'home':
+        return <NewMainPage />;
+      case 'pvp':
+        return <NewPvPGame />;
+      case 'profile':
+        return <NewProfilePage />;
+      case 'leaderboard':
+        return <NewLeaderboard />;
+      case 'settings':
+        return <NewSettings />;
+      default:
+        return <NewMainPage />;
+    }
+  };
+
   return (
     <div className={`app ${isNewTheme ? 'theme-new' : ''}`}>
       <div className="app-content">
-        {activeTab === 'profile' ? (
-          <>
-            <UserProfile />
-            <WalletConnect />
-          </>
-        ) : activeTab === 'admin' && isAdmin ? (
-          <AdminPanel />
-        ) : activeTab === 'new' ? (
-          <NewMainPage />
-        ) : (
-          <PvPGame />
-        )}
+        {renderPage()}
       </div>
 
       <nav className="bottom-nav">
         <button
-          className={`nav-item ${activeTab === 'new' ? 'active' : ''}`}
-          onClick={() => setActiveTab('new')}
+          className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
+          onClick={() => setActiveTab('home')}
         >
           <span className="nav-icon">🏠</span>
           <span className="nav-label">Home</span>
@@ -79,15 +80,20 @@ const AppContent: React.FC = () => {
           <span className="nav-icon">👤</span>
           <span className="nav-label">Profile</span>
         </button>
-        {isAdmin && (
-          <button
-            className={`nav-item ${activeTab === 'admin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('admin')}
-          >
-            <span className="nav-icon">🔧</span>
-            <span className="nav-label">Admin</span>
-          </button>
-        )}
+        <button
+          className={`nav-item ${activeTab === 'leaderboard' ? 'active' : ''}`}
+          onClick={() => setActiveTab('leaderboard')}
+        >
+          <span className="nav-icon">🏆</span>
+          <span className="nav-label">Top</span>
+        </button>
+        <button
+          className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('settings')}
+        >
+          <span className="nav-icon">⚙️</span>
+          <span className="nav-label">Settings</span>
+        </button>
       </nav>
 
       <ThemeToggle isNewTheme={isNewTheme} onToggle={toggleTheme} />

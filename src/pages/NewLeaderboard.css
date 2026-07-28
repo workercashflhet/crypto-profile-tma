@@ -1,0 +1,136 @@
+/* src/pages/NewLeaderboard.css */
+.new-leaderboard-page {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.timer-card {
+  padding: 16px !important;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timer-label {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.timer-value {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--accent-green);
+}
+
+/* Top 3 */
+.top-three {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.top-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease;
+}
+
+.top-player:active {
+  transform: scale(0.98);
+}
+
+.top-player.top-1 {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, var(--bg-card), #2A1A00);
+}
+
+.top-player.top-2 {
+  border-color: #C0C0C0;
+  background: linear-gradient(135deg, var(--bg-card), #1A1A2A);
+}
+
+.top-player.top-3 {
+  border-color: #CD7F32;
+  background: linear-gradient(135deg, var(--bg-card), #2A1A1A);
+}
+
+.top-player-rank {
+  font-size: 28px;
+}
+
+.top-player-info {
+  flex: 1;
+}
+
+.top-player-name {
+  display: block;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.top-player-bets {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.top-player-prize {
+  padding: 4px 12px;
+  background: rgba(255, 215, 0, 0.2);
+  color: #FFD700;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Others */
+.others-list {
+  padding: 16px !important;
+}
+
+.others-list h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.other-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.other-player:last-child {
+  border-bottom: none;
+}
+
+.other-player-rank {
+  font-size: 14px;
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.other-player-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.other-player-name {
+  font-weight: 500;
+}
+
+.other-player-bets {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-green);
+}
