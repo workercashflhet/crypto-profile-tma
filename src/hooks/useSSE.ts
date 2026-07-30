@@ -8,6 +8,8 @@ export const useSSE = () => {
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 10;
 
   const connect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -15,6 +17,7 @@ export const useSSE = () => {
     }
 
     try {
+      console.log('Connecting to SSE...');
       const eventSource = new EventSource('/api/game/events');
       eventSourceRef.current = eventSource;
 
@@ -22,33 +25,46 @@ export const useSSE = () => {
         console.log('SSE connected');
         setIsConnected(true);
         setError(null);
+        reconnectAttempts.current = 0;
       };
 
-      eventSource.addEventListener('game_update', (event) => {
+      // Обработка сообщений
+      eventSource.onmessage = (event) => {
         try {
+          // Пропускаем ping
+          if (event.data.startsWith(':')) return;
+          
           const data = JSON.parse(event.data);
-          setGameState(data);
+          if (data.type === 'init' || data.type === 'update') {
+            setGameState(data.data);
+          }
         } catch (err) {
-          console.error('Error parsing game update:', err);
+          console.error('Error parsing SSE message:', err);
         }
-      });
+      };
 
-      eventSource.addEventListener('ping', (event) => {
-        console.log('SSE ping:', event.data);
-      });
-
+      // Обработка ошибок
       eventSource.onerror = (err) => {
         console.error('SSE error:', err);
         setIsConnected(false);
-        setError('Connection lost. Reconnecting...');
         
-        // Переподключение через 3 секунды
+        reconnectAttempts.current += 1;
+        
+        if (reconnectAttempts.current >= maxReconnectAttempts) {
+          setError('Connection lost. Please refresh the page.');
+          return;
+        }
+
+        // Экспоненциальная задержка: 3s, 6s, 12s...
+        const delay = Math.min(3000 * Math.pow(2, reconnectAttempts.current - 1), 30000);
+        setError(`Reconnecting... (attempt ${reconnectAttempts.current})`);
+
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
         }
         reconnectTimeoutRef.current = setTimeout(() => {
           connect();
-        }, 3000);
+        }, delay);
       };
 
     } catch (err) {
@@ -67,6 +83,7 @@ export const useSSE = () => {
       reconnectTimeoutRef.current = null;
     }
     setIsConnected(false);
+    reconnectAttempts.current = 0;
   }, []);
 
   useEffect(() => {
@@ -78,6 +95,6 @@ export const useSSE = () => {
     gameState,
     isConnected,
     error,
-    reconnect: connect,
+    reconnect: connect
   };
 };
