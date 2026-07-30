@@ -31,7 +31,7 @@ const FALLBACK_GAME_STATE = {
 };
 
 export const NewPvPGame: React.FC = () => {
-  const { gameState: sseGameState, isConnected, error: sseError } = useSSE();
+  const { gameState: sseGameState, error: sseError } = useSSE();
   const { placeBet, spinWheel, resetGame, fetchGameState } = useGameAPI();
   const { balance, withdrawTon, withdrawStars, depositTon, depositStars } = useGameBalance();
   
