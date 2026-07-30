@@ -209,16 +209,6 @@ export const NewPvPGame: React.FC = () => {
 
   return (
     <div className="new-pvp-page">
-      {/* Индикатор соединения */}
-      <div className="connection-status">
-        <span className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`} />
-        <span className="status-text">{connectionStatus}</span>
-        {!isConnected && (
-          <button className="reconnect-btn" onClick={() => window.location.reload()}>
-            Reconnect
-          </button>
-        )}
-      </div>
 
       {/* Balance */}
       <div className="pvp-balance card">
