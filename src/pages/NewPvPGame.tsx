@@ -194,8 +194,6 @@ export const NewPvPGame: React.FC = () => {
   const maxBet = selectedCurrency === 'ton' ? balance.ton : balance.stars;
   const displayError = localError || sseError;
 
-  const connectionStatus = isConnected ? '🟢 Live' : '🔴 Offline';
-
   if (isLoading) {
     return (
       <div className="new-pvp-page">
