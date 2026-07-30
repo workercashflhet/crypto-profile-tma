@@ -11,7 +11,9 @@
     "strict": true,
     "resolveJsonModule": true,
     "outDir": "api-dist",
-    "rootDir": "api"
+    "rootDir": "api",
+    "moduleResolution": "node",
+    "types": ["node"]
   },
   "include": ["api/**/*"],
   "exclude": ["node_modules", "src"]
